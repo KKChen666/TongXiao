@@ -19,6 +19,17 @@ def seed_data():
     eng_id = 1
     pol_id = 2
 
+    # Books
+    cur.execute(f"INSERT INTO books (subject_id, name, order_num) VALUES ({place},{place},{place})",
+                (eng_id, "红宝书·考研英语词汇", 1))
+    cur.execute(f"INSERT INTO books (subject_id, name, order_num) VALUES ({place},{place},{place})",
+                (eng_id, "考研英语词汇全攻略", 2))
+    cur.execute(f"INSERT INTO books (subject_id, name, order_num) VALUES ({place},{place},{place})",
+                (pol_id, "考研政治核心考案", 1))
+    book_hongbao = 1
+    book_english = 2
+    book_politics = 3
+
     english_topics = [
         ("核心词汇 (高频词)", 1),
         ("核心词汇 (中频词)", 2),
@@ -28,8 +39,17 @@ def seed_data():
         ("完形填空搭配", 6),
     ]
     for name, order in english_topics:
-        cur.execute(f"INSERT INTO topics (subject_id, name, order_num) VALUES ({place},{place},{place})",
-                    (eng_id, name, order))
+        cur.execute(f"INSERT INTO topics (subject_id, book_id, name, order_num) VALUES ({place},{place},{place},{place})",
+                    (eng_id, book_english, name, order))
+
+    hongbao_topics = [
+        ("基础词汇 Unit 1", 1), ("基础词汇 Unit 2", 2), ("基础词汇 Unit 3", 3),
+        ("核心词汇 Unit 1", 4), ("核心词汇 Unit 2", 5), ("核心词汇 Unit 3", 6),
+        ("超纲词汇", 7),
+    ]
+    for name, order in hongbao_topics:
+        cur.execute(f"INSERT INTO topics (subject_id, book_id, name, order_num) VALUES ({place},{place},{place},{place})",
+                    (eng_id, book_hongbao, name, order))
 
     politics_topics = [
         ("马克思主义基本原理", 1),
@@ -39,61 +59,161 @@ def seed_data():
         ("形势与政策及当代世界经济与政治", 5),
     ]
     for name, order in politics_topics:
-        cur.execute(f"INSERT INTO topics (subject_id, name, order_num) VALUES ({place},{place},{place})",
-                    (pol_id, name, order))
+        cur.execute(f"INSERT INTO topics (subject_id, book_id, name, order_num) VALUES ({place},{place},{place},{place})",
+                    (pol_id, book_politics, name, order))
 
     english_cards = {
         1: [
-            ("abandon", "v. 放弃；遗弃\nn. 放任，放纵"),
-            ("absorb", "v. 吸收；吸引（注意）"),
-            ("abstract", "adj. 抽象的；理论上的\nn. 摘要"),
-            ("academic", "adj. 学术的；学院的\nn. 大学教师"),
-            ("accelerate", "v. 加速；促进"),
-            ("access", "n. 通道；机会\nv. 访问"),
-            ("accommodate", "v. 容纳；提供住处"),
-            ("accompany", "v. 陪伴；伴随"),
-            ("accomplish", "v. 完成；实现"),
-            ("accurate", "adj. 准确的；精确的"),
-            ("accuse", "v. 指控；谴责"),
-            ("achieve", "v. 达到；取得"),
-            ("acknowledge", "v. 承认；确认"),
-            ("acquire", "v. 获得；学到"),
-            ("adapt", "v. 适应；改编"),
-            ("adequate", "adj. 充足的；适当的"),
-            ("adjust", "v. 调整；适应"),
-            ("administration", "n. 管理；行政"),
-            ("adopt", "v. 采用；收养"),
-            ("advance", "v. 前进；促进\nn. 进步"),
-            ("adverse", "adj. 不利的；相反的"),
-            ("advocate", "v. 提倡\nn. 提倡者"),
-            ("affect", "v. 影响；感动"),
-            ("aggregate", "v. 总计；聚集"),
-            ("allocate", "v. 分配；拨出"),
-            ("alternative", "n. 替代物\nadj. 替代的"),
-            ("ambiguous", "adj. 模糊的；含糊的"),
-            ("ambitious", "adj. 有雄心的"),
-            ("analysis", "n. 分析；解析"),
-            ("anticipate", "v. 预期；期望"),
-            ("apparent", "adj. 明显的"),
-            ("appeal", "v. 呼吁；吸引\nn. 吸引力"),
-            ("application", "n. 申请；应用"),
-            ("approach", "v. 接近\nn. 方法；途径"),
-            ("appropriate", "adj. 适当的"),
-            ("approve", "v. 批准；赞成"),
-            ("arise", "v. 出现；产生"),
-            ("assign", "v. 分配；指派"),
-            ("associate", "v. 联系；联想"),
-            ("assume", "v. 假定；承担"),
-            ("attach", "v. 附上；连接"),
-            ("attempt", "v. 尝试\nn. 努力"),
-            ("attitude", "n. 态度；看法"),
-            ("attract", "v. 吸引；引起"),
-            ("authority", "n. 权威；权力"),
-            ("available", "adj. 可用的；有效的"),
-            ("barrier", "n. 障碍；屏障"),
-            ("benefit", "n. 利益\nv. 有益于"),
-            ("budget", "n. 预算\nadj. 廉价的"),
-            ("capability", "n. 能力；才能"),
+            ("abandon", "/əˈbændən/", "v. 放弃；遗弃；抛弃\nn. 放任；放纵",
+             "They had to abandon the project due to lack of funds. 由于缺乏资金，他们不得不放弃这个项目。",
+             "【用法】abandon sth/sb 放弃某物/抛弃某人\n【同义】give up, desert, forsake\n【反义】keep, retain, maintain"),
+            ("absorb", "/əbˈzɔːrb/", "v. 吸收；吸引（注意）；使专心；吸纳",
+             "The company will absorb all the costs. 公司将承担所有费用。",
+             "【用法】be absorbed in 全神贯注于\n【同义】take in, soak up, engross\n【搭配】absorb knowledge 吸收知识"),
+            ("abstract", "/ˈæbstrækt/", "adj. 抽象的；理论上的\nn. 摘要；抽象画\nv. 提取；摘录",
+             "Truth is abstract and difficult to define. 真理是抽象的，难以定义。",
+             "【用法】abstract noun 抽象名词\n【同义】theoretical, conceptual\n【反义】concrete, specific"),
+            ("academic", "/ˌækəˈdemɪk/", "adj. 学术的；学院的；学业（好）的\nn. 大学教师；学者",
+             "She had a brilliant academic career. 她拥有辉煌的学术生涯。",
+             "【用法】academic year 学年\n【同义】scholarly, educational\n【搭配】academic research 学术研究"),
+            ("accelerate", "/əkˈseləreɪt/", "v. 加速；促进；催促",
+             "Economic growth has accelerated this year. 今年经济增长加速了。",
+             "【用法】accelerate the pace of 加快……的步伐\n【同义】speed up, hasten, quicken\n【反义】decelerate, slow down"),
+            ("access", "/ˈækses/", "n. 通道；机会；使用权\nv. 访问；存取",
+             "Students need access to good libraries. 学生需要能使用好的图书馆。",
+             "【用法】have access to 有机会使用/接近\n【同义】entry, admission"),
+            ("accommodate", "/əˈkɒmədeɪt/", "v. 容纳；向……提供住处；使适应",
+             "The hotel can accommodate up to 500 guests. 这家酒店可容纳500位客人。",
+             "【用法】accommodate sb with sth 为某人提供某物\n【同义】hold, house, adapt"),
+            ("accompany", "/əˈkʌmpəni/", "v. 陪伴；伴随；为……伴奏",
+             "Please accompany me to the airport. 请陪我去机场。",
+             "【用法】accompany sb to 陪伴某人去……\n【同义】escort, go with"),
+            ("accomplish", "/əˈkʌmplɪʃ/", "v. 完成；实现；达到（目标）",
+             "We have accomplished all our goals. 我们已实现所有目标。",
+             "【用法】accomplish a task/goal 完成任务/实现目标\n【同义】achieve, complete, fulfill"),
+            ("accurate", "/ˈækjərət/", "adj. 准确的；精确的；正确的",
+             "Your information is not accurate. 你的信息不准确。",
+             "【用法】accurate measurement 精确测量\n【同义】precise, exact, correct\n【反义】inaccurate, wrong"),
+            ("accuse", "/əˈkjuːz/", "v. 指控；指责；谴责",
+             "He was accused of stealing. 他被指控偷窃。",
+             "【用法】accuse sb of (doing) sth 指控某人（做）某事\n【同义】blame, charge, indict"),
+            ("achieve", "/əˈtʃiːv/", "v. 达到；取得；获得（成功）",
+             "You can achieve anything if you work hard. 只要努力，你能实现任何目标。",
+             "【用法】achieve success/goal 取得成功/实现目标\n【同义】accomplish, attain, reach"),
+            ("acknowledge", "/əkˈnɒlɪdʒ/", "v. 承认；确认（收到）；致谢",
+             "He acknowledged his mistake. 他承认了自己的错误。",
+             "【用法】acknowledge doing sth 承认做了某事\n【同义】admit, recognize, accept"),
+            ("acquire", "/əˈkwaɪər/", "v. 获得；学到；收购",
+             "She acquired a good knowledge of English. 她学到了扎实的英语知识。",
+             "【用法】acquire knowledge/skills 获得知识/技能\n【同义】gain, obtain, get"),
+            ("adapt", "/əˈdæpt/", "v. 适应；改编；改写",
+             "We must adapt to the changing world. 我们必须适应不断变化的世界。",
+             "【用法】adapt (oneself) to 适应……\nadapt sth for 为……改编某物\n【同义】adjust, modify"),
+            ("adequate", "/ˈædɪkwət/", "adj. 充足的；适当的；胜任的",
+             "The supply is not adequate for the demand. 供不应求。",
+             "【用法】be adequate for 足够……\nbe adequate to do 足以做……\n【同义】sufficient, enough, ample"),
+            ("adjust", "/əˈdʒʌst/", "v. 调整；适应；校正",
+             "You need to adjust your attitude. 你需要调整态度。",
+             "【用法】adjust to 适应……\nadjust sth 调整某物\n【同义】adapt, regulate, modify"),
+            ("administration", "/ədˌmɪnɪˈstreɪʃn/", "n. 管理；行政（部门）；政府（任期）",
+             "The administration decided to cut taxes. 政府决定减税。",
+             "【用法】business administration 工商管理\n【同义】management, government"),
+            ("adopt", "/əˈdɒpt/", "v. 采用；采纳；收养",
+             "The company adopted a new strategy. 公司采取了新策略。",
+             "【用法】adopt a policy/approach 采取政策/方法\n【同义】embrace, take on, foster"),
+            ("advance", "/ədˈvɑːns/", "v. 前进；促进；提出\nn. 进步；预付（款）",
+             "Technology has advanced rapidly in recent years. 近年来技术进步迅速。",
+             "【用法】in advance 提前\nadvance sth 推进某事\n【同义】progress, proceed, improve"),
+            ("adverse", "/ˈædvɜːs/", "adj. 不利的；相反的；负面的",
+             "The decision had adverse effects. 这个决定产生了负面影响。",
+             "【用法】adverse conditions 不利条件\n【同义】unfavorable, negative, harmful\n【反义】favorable"),
+            ("advocate", "/ˈædvəkeɪt/", "v. 提倡；主张；拥护\nn. 提倡者；拥护者",
+             "Many people advocate for better healthcare. 许多人提倡改善医疗保健。",
+             "【用法】advocate (doing) sth 提倡（做）某事\n【同义】support, promote, urge"),
+            ("affect", "/əˈfekt/", "v. 影响；（使）感动；侵袭（疾病）",
+             "The economic crisis affected millions of people. 经济危机影响了数百万人。",
+             "【用法】be affected by 受……影响\n【同义】influence, impact, move"),
+            ("aggregate", "/ˈæɡrɪɡət/", "v. 总计；聚集\nadj. 总计的；合计的",
+             "The aggregate total reached one million. 总计数达到一百万。",
+             "【用法】in the aggregate 总计；总的来说\n【同义】total, combined, overall"),
+            ("allocate", "/ˈæləkeɪt/", "v. 分配；拨出（资金等）",
+             "The government allocated funds for education. 政府拨出教育经费。",
+             "【用法】allocate sth to 把某物分配给……\n【同义】assign, allot, distribute"),
+            ("alternative", "/ɔːlˈtɜːnətɪv/", "n. 替代物；选择\nadj. 替代的；另类的",
+             "We have no alternative but to leave. 我们别无选择，只能离开。",
+             "【用法】have no alternative but to do 别无选择只能做……\n【同义】option, choice, substitute"),
+            ("ambiguous", "/æmˈbɪɡjuəs/", "adj. 模糊的；含糊的；不明确的",
+             "His statement was deliberately ambiguous. 他的陈述故意含糊其辞。",
+             "【用法】ambiguous attitude 模糊态度\n【同义】vague, unclear, obscure\n【反义】clear, explicit"),
+            ("ambitious", "/æmˈbɪʃəs/", "adj. 有雄心的；野心勃勃的；宏大的",
+             "She is ambitious to become a CEO. 她雄心勃勃要当CEO。",
+             "【用法】be ambitious to do 渴望做……\n【同义】aspiring, determined, driven"),
+            ("analysis", "/əˈnæləsɪs/", "n. 分析；解析；（复数）analyses",
+             "A detailed analysis of the data is needed. 需要对数据进行详细分析。",
+             "【用法】in the final analysis 归根结底\n【同义】examination, study, evaluation"),
+            ("anticipate", "/ænˈtɪsɪpeɪt/", "v. 预期；期望；预料",
+             "We anticipate a big increase in sales. 我们预计销售额将大幅增长。",
+             "【用法】anticipate (doing) sth 预料（做）某事\n【同义】expect, foresee, predict"),
+            ("apparent", "/əˈpærənt/", "adj. 明显的；表面上的；显而易见的",
+             "It became apparent that he was lying. 很明显他在撒谎。",
+             "【用法】it is apparent that 很明显……\n【同义】obvious, evident, clear"),
+            ("appeal", "/əˈpiːl/", "v. 呼吁；上诉；吸引\nn. 吸引力；恳求",
+             "The idea appeals to young people. 这个想法吸引年轻人。",
+             "【用法】appeal to 吸引；呼吁\nappeal against 对……上诉\n【同义】attract, plead, request"),
+            ("application", "/ˌæplɪˈkeɪʃn/", "n. 申请（书）；应用；应用程序",
+             "Fill in the application form first. 先填写申请表。",
+             "【用法】application for 申请……\napplication of 应用……\n【同义】request, use, software"),
+            ("approach", "/əˈprəʊtʃ/", "v. 接近；靠近；处理\nn. 方法；途径；接近",
+             "We need a new approach to this problem. 我们需要新方法来处理这个问题。",
+             "【用法】approach to (doing) sth （做）某事的方法\n【同义】method, way, manner"),
+            ("appropriate", "/əˈprəʊpriət/", "adj. 适当的；合适的；恰当的",
+             "Choose the appropriate words for the context. 选择适合语境的词语。",
+             "【用法】be appropriate for 适合……\n【同义】suitable, proper, fitting\n【反义】inappropriate"),
+            ("approve", "/əˈpruːv/", "v. 批准；赞成；认可",
+             "The committee approved the plan. 委员会批准了该计划。",
+             "【用法】approve of 赞成；同意\n【同义】endorse, sanction, accept\n【反义】reject, disapprove"),
+            ("arise", "/əˈraɪz/", "v. 出现；产生；起源于（arose, arisen）",
+             "Problems arose when the system failed. 系统故障时出现了问题。",
+             "【用法】arise from/out of 由……引起\n【同义】emerge, occur, appear"),
+            ("assign", "/əˈsaɪn/", "v. 分配；指派；指定",
+             "The teacher assigned us a new task. 老师给我们分配了新任务。",
+             "【用法】assign sth to sb 把某物分配给某人\n【同义】allocate, allot, designate"),
+            ("associate", "/əˈsəʊʃieɪt/", "v. 联系；联想；交往\nn. 同事；伙伴",
+             "We associate China with the Great Wall. 提到中国我们会联想到长城。",
+             "【用法】associate with 与……有关联/交往\n【同义】connect, link, relate"),
+            ("assume", "/əˈsjuːm/", "v. 假定；假设；承担（责任）",
+             "I assume you know what you are doing. 我假定你知道自己在做什么。",
+             "【用法】assume responsibility 承担责任\n【同义】presume, suppose, undertake"),
+            ("attach", "/əˈtætʃ/", "v. 附上；连接；使依恋",
+             "Please attach your resume to the email. 请将简历附在邮件中。",
+             "【用法】attach importance to 重视\nbe attached to 附属于；依恋\n【同义】fasten, connect, affix"),
+            ("attempt", "/əˈtempt/", "v. 尝试；企图\nn. 努力；尝试；攻击",
+             "He attempted to climb the mountain alone. 他试图独自爬山。",
+             "【用法】attempt to do 尝试做……\nin an attempt to do 为了……\n【同义】try, endeavor, effort"),
+            ("attitude", "/ˈætɪtjuːd/", "n. 态度；看法；姿势",
+             "We need a positive attitude toward life. 我们需要积极的生活态度。",
+             "【用法】attitude to/toward 对……的态度\n【同义】viewpoint, outlook, stance"),
+            ("attract", "/əˈtrækt/", "v. 吸引；引起；诱惑",
+             "The museum attracts many visitors. 这家博物馆吸引了很多游客。",
+             "【用法】attract attention 引起注意\n【同义】draw, lure, appeal to\n【反义】repel"),
+            ("authority", "/ɔːˈθɒrəti/", "n. 权威；权力；当局（pl. authorities）",
+             "The local authorities are investigating. 地方当局正在调查。",
+             "【用法】have authority over 对……有管辖权\n【同义】power, jurisdiction, official"),
+            ("available", "/əˈveɪləbl/", "adj. 可用的；有效的；空闲的",
+             "Tickets are available at the box office. 售票处有票。",
+             "【用法】be available to 可用于/可供……使用\n【同义】accessible, obtainable, free"),
+            ("barrier", "/ˈbæriər/", "n. 障碍；屏障；关卡",
+             "Language barrier is a common problem. 语言障碍是一个常见问题。",
+             "【用法】trade barrier 贸易壁垒\n【同义】obstacle, hurdle, blockade"),
+            ("benefit", "/ˈbenɪfɪt/", "n. 利益；好处；福利\nv. 有益于；受益",
+             "Regular exercise benefits your health. 经常锻炼有益健康。",
+             "【用法】benefit from 从……中受益\nfor the benefit of 为了……的利益\n【同义】advantage, profit, gain"),
+            ("budget", "/ˈbʌdʒɪt/", "n. 预算\nv. 做预算\nadj. 廉价的；经济的",
+             "The project is over budget. 项目超出预算了。",
+             "【用法】within budget 在预算内\nbudget for 为……做预算\n【同义】financial plan, allowance"),
+            ("capability", "/ˌkeɪpəˈbɪləti/", "n. 能力；才能；性能",
+             "The system has the capability to handle large data. 该系统能够处理大数据。",
+             "【用法】capability to do/of doing 做……的能力\n【同义】ability, capacity, competence"),
         ],
         2: [
             ("capacity", "n. 能力；容量"),
@@ -363,18 +483,87 @@ def seed_data():
         ],
     }
 
+    hongbao_cards = [
+        ("premium", "/ˈpriːmiəm/", "n. 保险费；额外费用；奖金\nadj. 高级的；优质的",
+         "You have to pay a premium for express delivery. 快递需付额外费用。",
+         "【用法】at a premium 溢价；稀缺\n【同义】bonus, extra, superior"),
+        ("obscure", "/əbˈskjʊər/", "adj. 模糊的；晦涩的；无名的\nv. 使模糊；掩盖",
+         "His poetry is full of obscure references. 他的诗充满晦涩的引用。",
+         "【用法】obscure poet 无名诗人\n【同义】vague, unclear, ambiguous\n【反义】clear, famous"),
+        ("notorious", "/nəʊˈtɔːriəs/", "adj. 臭名昭著的；声名狼藉的",
+         "The city is notorious for its traffic jams. 这个城市以交通堵塞闻名。",
+         "【用法】be notorious for 因……而臭名昭著\n【同义】infamous, disreputable\n【反义】famous, renowned"),
+        ("scrutiny", "/ˈskruːtəni/", "n. 仔细审查；监督",
+         "The proposal is under close scrutiny. 这个提议正在被仔细审查。",
+         "【用法】under scrutiny 受到审查\n【同义】examination, inspection, analysis"),
+        ("allegation", "/ˌæləˈɡeɪʃn/", "n. 指控；断言；主张（尤指未经证实的）",
+         "The allegations of corruption were denied. 腐败的指控被否认了。",
+         "【用法】make an allegation 提出指控\n【同义】accusation, claim, assertion"),
+        ("concede", "/kənˈsiːd/", "v. 承认；让步；允许",
+         "He conceded that he had made a mistake. 他承认自己犯了错。",
+         "【用法】concede defeat 承认失败\n【同义】admit, acknowledge, yield"),
+        ("deteriorate", "/dɪˈtɪəriəreɪt/", "v. 恶化；退化；变质",
+         "The situation deteriorated rapidly. 局势迅速恶化。",
+         "【用法】deteriorate into 恶化为……\n【同义】worsen, decline, decay\n【反义】improve"),
+        ("elaborate", "/ɪˈlæbərət/", "adj. 精心制作的；详尽的\nv. 详细说明；精心制作",
+         "Could you elaborate on your plan? 你能详细说明你的计划吗？",
+         "【用法】elaborate on 详细说明\n【同义】detailed, intricate, explain"),
+        ("futile", "/ˈfjuːtaɪl/", "adj. 无效的；无用的；徒劳的",
+         "All attempts were futile. 所有尝试都是徒劳的。",
+         "【用法】futile attempt 徒劳的尝试\n【同义】useless, vain, pointless\n【反义】effective"),
+        ("hamper", "/ˈhæmpər/", "v. 妨碍；阻碍；束缚",
+         "The storm hampered rescue efforts. 暴风雨阻碍了救援工作。",
+         "【用法】be hampered by 受……阻碍\n【同义】hinder, impede, obstruct\n【反义】facilitate"),
+        ("inherent", "/ɪnˈhɪərənt/", "adj. 固有的；内在的；与生俱来的",
+         "There are inherent risks in any investment. 任何投资都有固有风险。",
+         "【用法】be inherent in 内在的；固有的\n【同义】intrinsic, innate, inborn"),
+        ("jeopardize", "/ˈdʒepədaɪz/", "v. 危及；损害；使陷入危险",
+         "The scandal jeopardized his career. 丑闻危及了他的职业生涯。",
+         "【用法】jeopardize one's future 危及某人的前途\n【同义】endanger, threaten, risk"),
+        ("legitimate", "/lɪˈdʒɪtɪmət/", "adj. 合法的；正当的\nv. 使合法",
+         "Is that a legitimate concern? 那是合理的担忧吗？",
+         "【用法】legitimate business 合法生意\n【同义】legal, lawful, valid\n【反义】illegitimate"),
+        ("magnitude", "/ˈmæɡnɪtjuːd/", "n. 巨大；重要性；震级",
+         "We underestimated the magnitude of the problem. 我们低估了问题的严重性。",
+         "【用法】of great magnitude 至关重要的\n【同义】scale, extent, significance"),
+        ("nominal", "/ˈnɒmɪnl/", "adj. 名义上的；象征性的；名词性的",
+         "He is only the nominal head of the company. 他只是公司的名义负责人。",
+         "【用法】nominal fee 象征性费用\n【同义】titular, symbolic, minimal"),
+    ]
+
+    hongbao_topic_ids = {
+        1: 7, 2: 8, 3: 9, 4: 10, 5: 11, 6: 12, 7: 13,
+    }
+
+    for idx, card in enumerate(hongbao_cards):
+        front, phonetic, back, example, back_detail = card
+        cur.execute(
+            f"INSERT INTO cards (topic_id, front, back, phonetic, example, back_detail, order_num) VALUES ({place},{place},{place},{place},{place},{place},{place})",
+            (hongbao_topic_ids[1], front, back, phonetic, example, back_detail, idx + 1),
+        )
+
     for topic_id, cards in english_cards.items():
-        for idx, (front, back) in enumerate(cards):
+        for idx, card_data in enumerate(cards):
+            front = card_data[0]
+            if len(card_data) == 2:
+                back = card_data[1]; phonetic = ""; example = ""; back_detail = ""
+            else:
+                phonetic = card_data[1]; back = card_data[2]
+                example = card_data[3] if len(card_data) > 3 else ""
+                back_detail = card_data[4] if len(card_data) > 4 else ""
             cur.execute(
-                f"INSERT INTO cards (topic_id, front, back, order_num) VALUES ({place},{place},{place},{place})",
-                (topic_id, front, back, idx + 1),
+                f"INSERT INTO cards (topic_id, front, back, phonetic, example, back_detail, order_num) VALUES ({place},{place},{place},{place},{place},{place},{place})",
+                (topic_id, front, back, phonetic, example, back_detail, idx + 1),
             )
 
+    politics_offset = len(english_topics) + len(hongbao_topics)
     for topic_id, cards in politics_cards.items():
-        for idx, (front, back) in enumerate(cards):
+        for idx, card_data in enumerate(cards):
+            front = card_data[0]
+            back = card_data[1] if len(card_data) > 1 else ""
             cur.execute(
-                f"INSERT INTO cards (topic_id, front, back, order_num) VALUES ({place},{place},{place},{place})",
-                (topic_id + len(english_topics), front, back, idx + 1),
+                f"INSERT INTO cards (topic_id, front, back, phonetic, example, back_detail, order_num) VALUES ({place},{place},{place},{place},{place},{place},{place})",
+                (topic_id + politics_offset, front, back, "", "", "", idx + 1),
             )
 
     if DB_TYPE == "mysql":

@@ -28,7 +28,7 @@ def get_conn():
     else:
         import sqlite3
         os.makedirs(os.path.dirname(SQLITE_PATH), exist_ok=True)
-        _connection = sqlite3.connect(SQLITE_PATH, check_same_thread=False)
+        _connection = sqlite3.connect(SQLITE_PATH, check_same_thread=False, isolation_level=None)
         _connection.row_factory = sqlite3.Row
         _connection.execute("PRAGMA journal_mode=WAL")
         _connection.execute("PRAGMA foreign_keys=ON")
@@ -52,6 +52,9 @@ def _fetchall(sql, params=None):
     return cur.fetchall()
 
 
+P = lambda: "%s" if DB_TYPE == "mysql" else "?"
+
+
 def init_db():
     conn = get_conn()
     cur = conn.cursor()
@@ -65,9 +68,19 @@ def init_db():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """)
         cur.execute("""
+            CREATE TABLE IF NOT EXISTS books (
+                id          INT AUTO_INCREMENT PRIMARY KEY,
+                subject_id  INT NOT NULL,
+                name        VARCHAR(200) NOT NULL,
+                order_num   INT DEFAULT 0,
+                FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """)
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS topics (
                 id          INT AUTO_INCREMENT PRIMARY KEY,
                 subject_id  INT NOT NULL,
+                book_id     INT DEFAULT NULL,
                 name        VARCHAR(200) NOT NULL,
                 order_num   INT DEFAULT 0,
                 FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
@@ -79,6 +92,9 @@ def init_db():
                 topic_id    INT NOT NULL,
                 front       TEXT NOT NULL,
                 back        TEXT NOT NULL,
+                phonetic    VARCHAR(100) DEFAULT '',
+                example     TEXT,
+                back_detail TEXT,
                 order_num   INT DEFAULT 0,
                 FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
@@ -100,9 +116,17 @@ def init_db():
                 display_name TEXT NOT NULL,
                 icon        TEXT DEFAULT ''
             );
+            CREATE TABLE IF NOT EXISTS books (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                subject_id  INTEGER NOT NULL,
+                name        TEXT NOT NULL,
+                order_num   INTEGER DEFAULT 0,
+                FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
+            );
             CREATE TABLE IF NOT EXISTS topics (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 subject_id  INTEGER NOT NULL,
+                book_id     INTEGER DEFAULT NULL,
                 name        TEXT NOT NULL,
                 order_num   INTEGER DEFAULT 0,
                 FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE
@@ -112,6 +136,9 @@ def init_db():
                 topic_id    INTEGER NOT NULL,
                 front       TEXT NOT NULL,
                 back        TEXT NOT NULL,
+                phonetic    TEXT DEFAULT '',
+                example     TEXT DEFAULT '',
+                back_detail TEXT DEFAULT '',
                 order_num   INTEGER DEFAULT 0,
                 FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
             );
@@ -131,51 +158,76 @@ def get_subjects():
     return _fetchall("SELECT * FROM subjects ORDER BY id")
 
 
-def get_topics(subject_id):
+def get_books(subject_id):
     return _fetchall(
-        "SELECT * FROM topics WHERE subject_id=%s ORDER BY order_num, id"
-        if DB_TYPE == "mysql"
-        else "SELECT * FROM topics WHERE subject_id=? ORDER BY order_num, id",
+        f"SELECT * FROM books WHERE subject_id={P()} ORDER BY order_num, id",
         (subject_id,),
+    )
+
+
+def get_book_progress(book_id):
+    place = P()
+    row1 = _fetchone(
+        f"SELECT COUNT(*) as cnt FROM cards WHERE topic_id IN (SELECT id FROM topics WHERE book_id={place})",
+        (book_id,),
+    )
+    total = row1["cnt"] if row1 else 0
+    row2 = _fetchone(
+        f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id IN (SELECT id FROM topics WHERE book_id={place}))",
+        (book_id,),
+    )
+    reviewed = row2["cnt"] if row2 else 0
+    return total, reviewed
+
+
+def get_topics(subject_id=None, book_id=None):
+    conds = []
+    params = []
+    if subject_id is not None:
+        conds.append(f"subject_id={P()}")
+        params.append(subject_id)
+    if book_id is not None:
+        conds.append(f"book_id={P()}")
+        params.append(book_id)
+    where = " AND ".join(conds) if conds else "1=1"
+    return _fetchall(
+        f"SELECT * FROM topics WHERE {where} ORDER BY order_num, id",
+        tuple(params),
     )
 
 
 def get_cards(topic_id):
     return _fetchall(
-        "SELECT * FROM cards WHERE topic_id=%s ORDER BY order_num, id"
-        if DB_TYPE == "mysql"
-        else "SELECT * FROM cards WHERE topic_id=? ORDER BY order_num, id",
+        f"SELECT * FROM cards WHERE topic_id={P()} ORDER BY order_num, id",
         (topic_id,),
     )
 
 
 def get_card_count(topic_id):
-    sql = "SELECT COUNT(*) as cnt FROM cards WHERE topic_id=%s" if DB_TYPE == "mysql" else "SELECT COUNT(*) as cnt FROM cards WHERE topic_id=?"
-    return _fetchone(sql, (topic_id,))["cnt"]
+    return _fetchone(
+        f"SELECT COUNT(*) as cnt FROM cards WHERE topic_id={P()}",
+        (topic_id,),
+    )["cnt"]
 
 
 def log_review(card_id, result):
     _execute(
-        "INSERT INTO review_log (card_id, result) VALUES (%s, %s)"
-        if DB_TYPE == "mysql"
-        else "INSERT INTO review_log (card_id, result) VALUES (?, ?)",
+        f"INSERT INTO review_log (card_id, result) VALUES ({P()}, {P()})",
         (card_id, result),
     )
 
 
 def get_topic_progress(topic_id):
     total = get_card_count(topic_id)
-    place = "%s" if DB_TYPE == "mysql" else "?"
     row = _fetchone(
-        f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id={place})",
+        f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id={P()})",
         (topic_id,),
     )
-    reviewed = row["cnt"] if row else 0
-    return total, reviewed
+    return total, row["cnt"] if row else 0
 
 
 def get_subject_progress(subject_id):
-    place = "%s" if DB_TYPE == "mysql" else "?"
+    place = P()
     row1 = _fetchone(
         f"SELECT COUNT(*) as cnt FROM cards WHERE topic_id IN (SELECT id FROM topics WHERE subject_id={place})",
         (subject_id,),
@@ -185,5 +237,4 @@ def get_subject_progress(subject_id):
         f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id IN (SELECT id FROM topics WHERE subject_id={place}))",
         (subject_id,),
     )
-    reviewed = row2["cnt"] if row2 else 0
-    return total, reviewed
+    return total, row2["cnt"] if row2 else 0

@@ -1,234 +1,268 @@
 import customtkinter as ctk
-from database.db import get_cards, log_review, get_topic_progress
-from config import COLOR_SUCCESS, COLOR_DANGER, COLOR_PRIMARY
+import threading
+from database.db import get_cards, log_review
+from config import COLOR_TEXT, COLOR_TEXT_SUB, COLOR_PRIMARY, COLOR_SUCCESS, COLOR_DANGER
 
 
 class CardPage(ctk.CTkFrame):
-    def __init__(self, parent, app, topic):
-        super().__init__(parent, fg_color="transparent")
+    def __init__(self, parent, app, topic, subject=None, book=None):
+        super().__init__(parent, fg_color="#F2F3F7", corner_radius=0)
         self.app = app
         self.topic = topic
+        self.subject = subject
+        self.book = book
         self.cards = get_cards(topic["id"])
-        self.index = 0
+        self.idx = 0
         self.flipped = False
         self.results = []
         self.finished = False
-        self._build_ui()
 
-    def _build_ui(self):
         if not self.cards:
             self._show_empty()
             return
-        header = ctk.CTkFrame(self, fg_color="transparent")
-        header.pack(fill="x", padx=30, pady=(20, 5))
+        self._build()
 
-        ctk.CTkButton(
-            header, text="← 返回", width=80, height=32,
-            fg_color="transparent", text_color="#4A90D9",
-            hover_color="#EBF5FB", font=ctk.CTkFont(size=14),
-            command=self._go_back,
-        ).pack(side="left")
+    def _speak(self, text):
+        if not text:
+            return
+        threading.Thread(target=self._do_speak, args=(text,), daemon=True).start()
+
+    def _do_speak(self, text):
+        try:
+            import pythoncom
+            from win32com.client import Dispatch
+            pythoncom.CoInitialize()
+            engine = Dispatch("SAPI.SpVoice")
+            for v in engine.GetVoices():
+                name = v.GetDescription().lower()
+                if "zira" in name or "english" in name:
+                    engine.Voice = v
+                    break
+            engine.Rate = 1
+            engine.Speak(text, 1)
+        except Exception:
+            pass
+
+    def _build(self):
+        top = ctk.CTkFrame(self, fg_color="transparent")
+        top.pack(fill="x", padx=20, pady=(36, 0))
+
+        back_lbl = ctk.CTkLabel(
+            top, text="‹ 返回",
+            font=ctk.CTkFont(size=15),
+            text_color=COLOR_PRIMARY, cursor="hand2",
+        )
+        back_lbl.pack(side="left")
+        back_lbl.bind("<Button-1>", lambda e, app=self.app, bk=self.book or self.app.current_book: app._show_topics(bk))
 
         ctk.CTkLabel(
-            header, text=self.topic["name"],
-            font=ctk.CTkFont(size=20, weight="bold"), text_color="#2C3E50",
-        ).pack(side="left", padx=20)
+            top, text=self.topic["name"],
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=COLOR_TEXT,
+        ).pack(side="left", padx=12)
 
-        self.progress_label = ctk.CTkLabel(
-            header, text="", font=ctk.CTkFont(size=14), text_color="#7F8C8D",
+        self.prog_lbl = ctk.CTkLabel(
+            top, text="", font=ctk.CTkFont(size=13),
+            text_color=COLOR_TEXT_SUB,
         )
-        self.progress_label.pack(side="right")
+        self.prog_lbl.pack(side="right")
+
+        self.bar = ctk.CTkProgressBar(
+            self, height=4, corner_radius=2,
+            fg_color="#E8EDF2", progress_color=COLOR_PRIMARY,
+        )
+        self.bar.pack(fill="x", padx=20, pady=(8, 0))
 
         self.center = ctk.CTkFrame(self, fg_color="transparent")
-        self.center.pack(expand=True, fill="both", padx=60)
+        self.center.pack(expand=True, fill="both", padx=20, pady=10)
 
-        self.card_frame = ctk.CTkFrame(
-            self.center, corner_radius=16, fg_color="white",
-            border_width=0, cursor="hand2",
+        self.card = ctk.CTkFrame(
+            self.center, fg_color="white", corner_radius=20,
+            cursor="hand2",
         )
-        self.card_frame.pack(expand=True, fill="both", padx=20, pady=10)
+        self.card.pack(expand=True, fill="both")
+        self._build_card_inner()
 
-        self.card_inner = ctk.CTkFrame(self.card_frame, fg_color="transparent")
-        self.card_inner.place(relx=0.5, rely=0.5, anchor="center")
-
-        self.card_text = ctk.CTkLabel(
-            self.card_inner, text="",
-            font=ctk.CTkFont(size=24, weight="bold"),
-            text_color="#2C3E50", justify="center", wraplength=500,
-        )
-        self.card_text.pack(pady=(0, 15))
-
-        self.flip_hint = ctk.CTkLabel(
-            self.card_inner, text="点击卡片翻转",
-            font=ctk.CTkFont(size=13), text_color="#BDC3C7",
-        )
-        self.flip_hint.pack()
-
-        self.card_frame.bind("<Button-1>", lambda e: self._flip_card())
-        self.card_text.bind("<Button-1>", lambda e: self._flip_card())
-        self.flip_hint.bind("<Button-1>", lambda e: self._flip_card())
-
-        self.btn_frame = ctk.CTkFrame(self.center, fg_color="transparent")
-        self.btn_frame.pack(pady=(10, 25))
+        self.btn_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.btn_frame.pack(pady=(6, 28))
 
         self.btn_unknown = ctk.CTkButton(
-            self.btn_frame, text="不认识", width=120, height=44,
-            fg_color=COLOR_DANGER, hover_color="#E0434A",
-            font=ctk.CTkFont(size=16, weight="bold"),
-            corner_radius=22, command=lambda: self._answer(0),
+            self.btn_frame, text="不认识", width=130, height=48,
+            fg_color=COLOR_DANGER, font=ctk.CTkFont(size=15, weight="bold"),
+            corner_radius=24, command=lambda: self._answer(0),
         )
-        self.btn_unknown.pack(side="left", padx=10)
+        self.btn_unknown.pack(side="left", padx=8)
 
-        self.btn_know = ctk.CTkButton(
-            self.btn_frame, text="认识", width=120, height=44,
-            fg_color=COLOR_SUCCESS, hover_color="#45A814",
-            font=ctk.CTkFont(size=16, weight="bold"),
-            corner_radius=22, command=lambda: self._answer(1),
+        self.btn_known = ctk.CTkButton(
+            self.btn_frame, text="认识", width=130, height=48,
+            fg_color=COLOR_SUCCESS, font=ctk.CTkFont(size=15, weight="bold"),
+            corner_radius=24, command=lambda: self._answer(1),
         )
-        self.btn_know.pack(side="left", padx=10)
+        self.btn_known.pack(side="left", padx=8)
 
         self._show_card()
 
-    def _show_card(self):
-        if self.index >= len(self.cards):
-            self._show_summary()
-            return
+    def _build_card_inner(self):
+        self.inner = ctk.CTkFrame(self.card, fg_color="transparent")
+        self.inner.place(relx=0.5, rely=0.5, anchor="center")
 
-        card = self.cards[self.index]
-        self.flipped = False
-        self.card_text.configure(text=card["front"], font=ctk.CTkFont(size=26, weight="bold"), text_color="#2C3E50")
-        self.flip_hint.configure(text="点击卡片翻转")
-        self.progress_label.configure(
-            text=f"{self.index + 1} / {len(self.cards)}"
+        self.word_lbl = ctk.CTkLabel(
+            self.inner, text="",
+            font=ctk.CTkFont(size=30, weight="bold"),
+            text_color="#1A1A2E", justify="center",
         )
-        self.btn_unknown.configure(state="normal")
-        self.btn_know.configure(state="normal")
+        self.word_lbl.pack(pady=(10, 4))
 
-    def _flip_card(self):
-        if self.finished or self.index >= len(self.cards):
+        self.phonetic_lbl = ctk.CTkLabel(
+            self.inner, text="",
+            font=ctk.CTkFont(size=15),
+            text_color="#8E8E93", justify="center",
+        )
+        self.phonetic_lbl.pack(pady=(0, 8))
+
+        is_english = self.subject and self.subject.get("name") == "english"
+        if is_english:
+            self.speak_btn = ctk.CTkLabel(
+                self.inner, text="🔊 点击朗读",
+                font=ctk.CTkFont(size=16, weight="bold"),
+                text_color=COLOR_PRIMARY, cursor="hand2",
+            )
+            self.speak_btn.pack(pady=(0, 12))
+            self.speak_btn.bind("<Button-1>", lambda e: self._speak(self.current_word()))
+
+        self.def_lbl = ctk.CTkLabel(
+            self.inner, text="",
+            font=ctk.CTkFont(size=16),
+            text_color="#2C3E50", justify="center",
+            wraplength=320,
+        )
+        self.def_lbl.pack(pady=(0, 4))
+
+        self.example_lbl = ctk.CTkLabel(
+            self.inner, text="",
+            font=ctk.CTkFont(size=13),
+            text_color="#8E8E93", justify="center",
+            wraplength=320,
+        )
+        self.example_lbl.pack(pady=(0, 10))
+
+        self.flip_hint = ctk.CTkLabel(
+            self.inner, text="点击卡片查看详情",
+            font=ctk.CTkFont(size=12),
+            text_color="#C7C7CC",
+        )
+        self.flip_hint.pack(pady=(0, 4))
+
+        self.card.bind("<Button-1>", lambda e: self._flip())
+        for w in [self.word_lbl, self.def_lbl, self.example_lbl, self.flip_hint]:
+            w.bind("<Button-1>", lambda e: self._flip())
+
+    def current_word(self):
+        if self.idx < len(self.cards):
+            return self.cards[self.idx]["front"]
+        return ""
+
+    def _show_card(self):
+        if self.idx >= len(self.cards):
+            self._summary()
+            return
+        c = self.cards[self.idx]
+        self.flipped = False
+        self._set_content(c["front"], c.get("phonetic", ""), c["back"], c.get("example", ""))
+        self.prog_lbl.configure(text=f"{self.idx + 1}/{len(self.cards)}")
+        self.bar.set((self.idx) / len(self.cards))
+        self.btn_unknown.configure(state="normal")
+        self.btn_known.configure(state="normal")
+
+    def _set_content(self, word, phonetic, definition, example):
+        self.word_lbl.configure(text=word)
+        self.phonetic_lbl.configure(text=phonetic)
+        self.def_lbl.configure(text=definition)
+        self.example_lbl.configure(text=f"📝 {example}" if example else "")
+        self.flip_hint.configure(text="点击卡片翻转")
+
+    def _flip(self):
+        if self.finished or self.idx >= len(self.cards):
             return
         self.flipped = not self.flipped
-        card = self.cards[self.index]
+        c = self.cards[self.idx]
         if self.flipped:
-            self.card_text.configure(
-                text=card["back"],
-                font=ctk.CTkFont(size=18),
-                text_color="#34495E",
-            )
-            self.flip_hint.configure(text="点击查看正面")
+            self.def_lbl.configure(text=c.get("back_detail", c["back"]), font=ctk.CTkFont(size=14), text_color="#2C3E50")
+            self.example_lbl.configure(text=f"📝 {c.get('example', '')}" if c.get("example") else "")
+            self.flip_hint.configure(text="点击查看单词")
+            self.word_lbl.configure(font=ctk.CTkFont(size=22, weight="bold"))
         else:
-            self.card_text.configure(
-                text=card["front"],
-                font=ctk.CTkFont(size=26, weight="bold"),
-                text_color="#2C3E50",
-            )
-            self.flip_hint.configure(text="点击卡片翻转")
+            self._set_content(c["front"], c.get("phonetic", ""), c["back"], c.get("example", ""))
+            self.word_lbl.configure(font=ctk.CTkFont(size=30, weight="bold"))
 
     def _answer(self, result):
         if self.finished:
             return
-        card = self.cards[self.index]
-        log_review(card["id"], result)
+        log_review(self.cards[self.idx]["id"], result)
         self.results.append(result)
-        self.index += 1
-        if self.index >= len(self.cards):
-            self._show_summary()
-        else:
-            self._show_card()
+        self.idx += 1
+        self._show_card()
 
-    def _show_summary(self):
+    def _summary(self):
         self.finished = True
-        self.card_frame.configure(cursor="")
-        self.card_inner.destroy()
+        self.card.configure(cursor="")
+        self.inner.destroy()
+        self.btn_frame.pack_forget()
 
-        summary = ctk.CTkFrame(self.card_frame, fg_color="transparent")
-        summary.place(relx=0.5, rely=0.5, anchor="center")
+        s = ctk.CTkFrame(self.card, fg_color="transparent")
+        s.place(relx=0.5, rely=0.5, anchor="center")
 
         ctk.CTkLabel(
-            summary, text="🎉 完成！",
-            font=ctk.CTkFont(size=32, weight="bold"), text_color="#2C3E50",
-        ).pack(pady=(0, 5))
+            s, text="🎉 完成！",
+            font=ctk.CTkFont(size=30, weight="bold"),
+            text_color="#1A1A2E",
+        ).pack(pady=(0, 4))
 
         known = sum(self.results)
-        unknown = len(self.results) - known
         total = len(self.results)
-        pct = (known / total * 100) if total > 0 else 0
+        pct = (known / total * 100) if total else 0
 
-        ctk.CTkLabel(
-            summary, text=f"共 {total} 张卡片",
-            font=ctk.CTkFont(size=16), text_color="#7F8C8D",
-        ).pack(pady=5)
+        for t, v in [(f"共 {total} 张卡片", "#8E8E93"), (f"认识 {known}  不认识 {total - known}", "#8E8E93")]:
+            ctk.CTkLabel(s, text=t, font=ctk.CTkFont(size=14), text_color=v).pack()
 
-        ctk.CTkLabel(
-            summary, text=f"认识 {known}  不认识 {unknown}",
-            font=ctk.CTkFont(size=16), text_color="#7F8C8D",
-        ).pack(pady=2)
-
-        progress = ctk.CTkProgressBar(
-            summary, height=8, corner_radius=4,
+        bar = ctk.CTkProgressBar(
+            s, height=6, corner_radius=3,
             fg_color="#FFE0E0", progress_color=COLOR_SUCCESS,
         )
-        progress.pack(fill="x", padx=30, pady=(10, 5))
-        progress.set(pct / 100)
+        bar.pack(fill="x", padx=24, pady=(8, 4))
+        bar.set(pct / 100)
 
         ctk.CTkLabel(
-            summary, text=f"掌握率 {pct:.0f}%",
+            s, text=f"掌握率 {pct:.0f}%",
             font=ctk.CTkFont(size=14, weight="bold"),
             text_color=COLOR_SUCCESS if pct >= 60 else COLOR_DANGER,
-        ).pack(pady=(0, 15))
+        ).pack(pady=(0, 16))
 
-        btn_row = ctk.CTkFrame(summary, fg_color="transparent")
-        btn_row.pack(pady=10)
-
+        row = ctk.CTkFrame(s, fg_color="transparent")
+        row.pack()
         ctk.CTkButton(
-            btn_row, text="重新背诵", width=120, height=40,
-            fg_color=COLOR_PRIMARY, hover_color="#3A7BD5",
-            font=ctk.CTkFont(size=14), corner_radius=20,
-            command=self._restart,
-        ).pack(side="left", padx=8)
-
+            row, text="再来一次", width=110, height=40,
+            fg_color=COLOR_PRIMARY, corner_radius=20,
+            font=ctk.CTkFont(size=14), command=self._restart,
+        ).pack(side="left", padx=5)
         ctk.CTkButton(
-            btn_row, text="返回章节", width=120, height=40,
-            fg_color="#E8EDF2", text_color="#2C3E50",
-            hover_color="#D0D5DD", font=ctk.CTkFont(size=14),
-            corner_radius=20, command=self._go_back,
-        ).pack(side="left", padx=8)
+            row, text="返回", width=110, height=40,
+            fg_color="#E8EDF2", text_color="#1A1A2E",
+            corner_radius=20, font=ctk.CTkFont(size=14),
+            command=lambda: self.app._show_topics(self.book or self.app.current_book),
+        ).pack(side="left", padx=5)
 
-        self.btn_frame.pack_forget()
+    def _restart(self):
+        self.finished = False
+        self.idx = 0
+        self.results = []
+        self.card.configure(cursor="hand2")
+        self._build_card_inner()
+        self.btn_frame.pack(pady=(6, 28))
+        self._show_card()
 
     def _show_empty(self):
         ctk.CTkLabel(
             self, text="此章节暂无卡片",
-            font=ctk.CTkFont(size=20), text_color="#7F8C8D",
+            font=ctk.CTkFont(size=18), text_color=COLOR_TEXT_SUB,
         ).pack(expand=True)
-        ctk.CTkButton(
-            self, text="返回章节", width=120, height=40,
-            fg_color=COLOR_PRIMARY, command=self._go_back,
-        ).pack(pady=20)
-
-    def _restart(self):
-        self.finished = False
-        self.index = 0
-        self.results = []
-        self.card_frame.configure(cursor="hand2")
-        self.card_inner = ctk.CTkFrame(self.card_frame, fg_color="transparent")
-        self.card_inner.place(relx=0.5, rely=0.5, anchor="center")
-        self.card_text = ctk.CTkLabel(
-            self.card_inner, text="",
-            font=ctk.CTkFont(size=24, weight="bold"),
-            text_color="#2C3E50", justify="center", wraplength=500,
-        )
-        self.card_text.pack(pady=(0, 15))
-        self.flip_hint = ctk.CTkLabel(
-            self.card_inner, text="点击卡片翻转",
-            font=ctk.CTkFont(size=13), text_color="#BDC3C7",
-        )
-        self.flip_hint.pack()
-        self.card_frame.bind("<Button-1>", lambda e: self._flip_card())
-        self.card_text.bind("<Button-1>", lambda e: self._flip_card())
-        self.flip_hint.bind("<Button-1>", lambda e: self._flip_card())
-        self.btn_frame.pack(pady=(10, 25))
-        self._show_card()
-
-    def _go_back(self):
-        self.app.show_topics(self.app.current_subject)

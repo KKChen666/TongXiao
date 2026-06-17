@@ -1,13 +1,13 @@
 import customtkinter as ctk
-from database.db import get_topics, get_topic_progress, get_subjects
-from config import COLOR_TEXT, COLOR_TEXT_SUB, COLOR_PRIMARY, COLOR_SUCCESS
+from database.db import get_books, get_book_progress
+from config import COLOR_TEXT, COLOR_TEXT_SUB, COLOR_PRIMARY
 
 
-class TopicPage(ctk.CTkFrame):
-    def __init__(self, parent, app, book):
+class BookPage(ctk.CTkFrame):
+    def __init__(self, parent, app, subject):
         super().__init__(parent, fg_color="#F2F3F7", corner_radius=0)
         self.app = app
-        self.book = book
+        self.subject = subject
         self._build()
 
     def _build(self):
@@ -20,14 +20,20 @@ class TopicPage(ctk.CTkFrame):
             text_color=COLOR_PRIMARY, cursor="hand2",
         ).pack(side="left")
         top.winfo_children()[0].bind(
-            "<Button-1>", lambda e: self.app._show_books(self.app.current_subject)
+            "<Button-1>", lambda e: self.app._show_review()
         )
 
         ctk.CTkLabel(
-            top, text=self.book["name"],
+            top, text=self.subject["display_name"],
             font=ctk.CTkFont(size=20, weight="bold"),
             text_color=COLOR_TEXT,
         ).pack(side="left", padx=16)
+
+        ctk.CTkLabel(
+            self, text="选择词书",
+            font=ctk.CTkFont(size=13),
+            text_color=COLOR_TEXT_SUB,
+        ).pack(padx=24, anchor="w")
 
         scroll = ctk.CTkScrollableFrame(
             self, fg_color="transparent",
@@ -35,9 +41,9 @@ class TopicPage(ctk.CTkFrame):
         )
         scroll.pack(fill="both", expand=True, padx=20, pady=5)
 
-        topics = get_topics(book_id=self.book["id"])
-        for t in topics:
-            total, reviewed = get_topic_progress(t["id"])
+        books = get_books(self.subject["id"])
+        for b in books:
+            total, reviewed = get_book_progress(b["id"])
             pct = (reviewed / total * 100) if total > 0 else 0
 
             card = ctk.CTkFrame(
@@ -54,39 +60,27 @@ class TopicPage(ctk.CTkFrame):
             left.pack(side="left", fill="x", expand=True)
 
             ctk.CTkLabel(
-                left, text=t["name"],
-                font=ctk.CTkFont(size=15, weight="bold"),
+                left, text=b["name"],
+                font=ctk.CTkFont(size=16, weight="bold"),
                 text_color=COLOR_TEXT, anchor="w",
             ).pack(anchor="w")
 
             ctk.CTkLabel(
-                left, text=f"{reviewed}/{total}",
+                left,
+                text=f"{'📚 ' if total == 0 else ''}共 {total} 张 · 已掌握 {reviewed} ({pct:.0f}%)",
                 font=ctk.CTkFont(size=12),
                 text_color=COLOR_TEXT_SUB, anchor="w",
-            ).pack(anchor="w", pady=(2, 4))
+            ).pack(anchor="w", pady=(2, 0))
 
-            bar = ctk.CTkProgressBar(
-                left, height=4, corner_radius=2,
-                fg_color="#E8EDF2",
-                progress_color=COLOR_SUCCESS if pct == 100 else COLOR_PRIMARY,
+            arrow = ctk.CTkLabel(
+                inner, text="›",
+                font=ctk.CTkFont(size=24, weight="bold"),
+                text_color="#C7C7CC",
             )
-            bar.pack(fill="x")
-            bar.set(pct / 100)
+            arrow.pack(side="right", padx=(5, 0))
 
-            label = "复习" if reviewed > 0 else "开始"
-            btn = ctk.CTkButton(
-                inner, text=label, width=60, height=30,
-                fg_color=COLOR_PRIMARY,
-                font=ctk.CTkFont(size=13),
-                corner_radius=15, cursor="hand2",
-                command=lambda tp=t, bk=self.book: self.app._show_cards(tp, bk),
-            )
-            btn.pack(side="right", padx=(8, 0))
-
-            card.bind(
-                "<Button-1>", lambda e, tp=t, bk=self.book: self.app._show_cards(tp, bk)
-            )
+            card.bind("<Button-1>", lambda e, bk=b: self.app._show_topics(bk))
             for ch in card.winfo_children():
-                ch.bind(
-                    "<Button-1>", lambda e, tp=t, bk=self.book: self.app._show_cards(tp, bk),
-                )
+                ch.bind("<Button-1>", lambda e, bk=b: self.app._show_topics(bk))
+                for sub in ch.winfo_children():
+                    sub.bind("<Button-1>", lambda e, bk=b: self.app._show_topics(bk))
