@@ -1,99 +1,79 @@
 import customtkinter as ctk
 from database.db import get_subjects, get_subject_progress
+from config import COLOR_TEXT, COLOR_TEXT_SUB, COLOR_PRIMARY
 
 
 class SubjectPage(ctk.CTkFrame):
     def __init__(self, parent, app):
-        super().__init__(parent, fg_color="transparent")
+        super().__init__(parent, fg_color="#F2F3F7", corner_radius=0)
         self.app = app
-        self._build_ui()
+        self._build()
 
-    def _build_ui(self):
-        header = ctk.CTkLabel(
-            self,
-            text="📚 考研背诵助手",
-            font=ctk.CTkFont(size=28, weight="bold"),
-            text_color="#2C3E50",
-        )
-        header.pack(pady=(50, 10))
+    def _build(self):
+        ctk.CTkLabel(
+            self, text="考研背诵",
+            font=ctk.CTkFont(size=26, weight="bold"),
+            text_color=COLOR_TEXT,
+        ).pack(pady=(40, 5))
 
-        subtitle = ctk.CTkLabel(
-            self,
-            text="选择科目开始背诵",
-            font=ctk.CTkFont(size=14),
-            text_color="#7F8C8D",
-        )
-        subtitle.pack(pady=(0, 40))
+        ctk.CTkLabel(
+            self, text="选择科目开始学习",
+            font=ctk.CTkFont(size=13),
+            text_color=COLOR_TEXT_SUB,
+        ).pack(pady=(0, 25))
 
         subjects = get_subjects()
-        cards_frame = ctk.CTkFrame(self, fg_color="transparent")
-        cards_frame.pack(expand=True, fill="both", padx=80, pady=20)
-
-        for subject in subjects:
-            sid = subject["id"]
-            name = subject["display_name"]
-            total, reviewed = get_subject_progress(sid)
+        for s in subjects:
+            total, reviewed = get_subject_progress(s["id"])
             pct = (reviewed / total * 100) if total > 0 else 0
 
             card = ctk.CTkFrame(
-                cards_frame,
-                corner_radius=16,
-                border_width=0,
-                fg_color="white",
+                self, fg_color="white", corner_radius=16,
+                cursor="hand2", height=110,
             )
-            card.pack(fill="x", pady=10, ipady=20)
-            card.configure(cursor="hand2")
+            card.pack(fill="x", padx=24, pady=7)
+            card.pack_propagate(False)
 
-            icon_label = ctk.CTkLabel(
-                card,
-                text=subject["icon"],
-                font=ctk.CTkFont(size=48),
+            row = ctk.CTkFrame(card, fg_color="transparent")
+            row.pack(fill="both", expand=True, padx=20, pady=12)
+
+            icon = ctk.CTkLabel(
+                row, text=s["icon"],
+                font=ctk.CTkFont(size=36),
             )
-            icon_label.pack(side="left", padx=(30, 10))
+            icon.pack(side="left", padx=(0, 14))
 
-            text_frame = ctk.CTkFrame(card, fg_color="transparent")
-            text_frame.pack(side="left", fill="x", expand=True, padx=10)
+            mid = ctk.CTkFrame(row, fg_color="transparent")
+            mid.pack(side="left", fill="x", expand=True)
 
             ctk.CTkLabel(
-                text_frame,
-                text=name,
-                font=ctk.CTkFont(size=20, weight="bold"),
-                text_color="#2C3E50",
-                anchor="w",
-            ).pack(anchor="w", pady=(8, 2))
-
-            ctk.CTkLabel(
-                text_frame,
-                text=f"已掌握 {reviewed}/{total} 题 ({pct:.0f}%)",
-                font=ctk.CTkFont(size=13),
-                text_color="#7F8C8D",
-                anchor="w",
+                mid, text=s["display_name"],
+                font=ctk.CTkFont(size=18, weight="bold"),
+                text_color=COLOR_TEXT, anchor="w",
             ).pack(anchor="w")
 
-            progress = ctk.CTkProgressBar(
-                text_frame,
-                height=6,
-                corner_radius=3,
-                fg_color="#E8EDF2",
-                progress_color="#4A90D9",
+            ctk.CTkLabel(
+                mid, text=f"{reviewed}/{total} 已掌握",
+                font=ctk.CTkFont(size=12),
+                text_color=COLOR_TEXT_SUB, anchor="w",
+            ).pack(anchor="w", pady=(2, 4))
+
+            bar = ctk.CTkProgressBar(
+                mid, height=5, corner_radius=3,
+                fg_color="#E8EDF2", progress_color=COLOR_PRIMARY,
             )
-            progress.pack(fill="x", pady=(6, 8))
-            progress.set(pct / 100)
+            bar.pack(fill="x")
+            bar.set(pct / 100)
 
             arrow = ctk.CTkLabel(
-                card,
-                text="›",
-                font=ctk.CTkFont(size=32),
-                text_color="#BDC3C7",
+                row, text="›",
+                font=ctk.CTkFont(size=28, weight="bold"),
+                text_color="#C7C7CC",
             )
-            arrow.pack(side="right", padx=(10, 25))
+            arrow.pack(side="right", padx=(5, 0))
 
-            card.bind(
-                "<Button-1>",
-                lambda e, s=subject: self.app.show_topics(s),
-            )
+            card.bind("<Button-1>", lambda e, sb=s: self.app._show_books(sb))
             for child in card.winfo_children():
-                child.bind(
-                    "<Button-1>",
-                    lambda e, s=subject: self.app.show_topics(s),
-                )
+                child.bind("<Button-1>", lambda e, sb=s: self.app._show_books(sb))
+                for sub in child.winfo_children():
+                    sub.bind("<Button-1>", lambda e, sb=s: self.app._show_books(sb))
