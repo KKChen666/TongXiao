@@ -16,6 +16,9 @@ class CardPage(ctk.CTkFrame):
         self._build_ui()
 
     def _build_ui(self):
+        if not self.cards:
+            self._show_empty()
+            return
         header = ctk.CTkFrame(self, fg_color="transparent")
         header.pack(fill="x", padx=30, pady=(20, 5))
 
@@ -192,6 +195,16 @@ class CardPage(ctk.CTkFrame):
         ).pack(side="left", padx=8)
 
         self.btn_frame.pack_forget()
+
+    def _show_empty(self):
+        ctk.CTkLabel(
+            self, text="此章节暂无卡片",
+            font=ctk.CTkFont(size=20), text_color="#7F8C8D",
+        ).pack(expand=True)
+        ctk.CTkButton(
+            self, text="返回章节", width=120, height=40,
+            fg_color=COLOR_PRIMARY, command=self._go_back,
+        ).pack(pady=20)
 
     def _restart(self):
         self.finished = False

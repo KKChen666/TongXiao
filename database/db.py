@@ -7,7 +7,11 @@ _connection = None
 def get_conn():
     global _connection
     if _connection is not None:
-        return _connection
+        try:
+            _connection.ping()
+            return _connection
+        except Exception:
+            _connection = None
     if DB_TYPE == "mysql":
         import pymysql
         _connection = pymysql.connect(
