@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  tongxiao:
+    build: .
+    container_name: tongxiao
+    restart: unless-stopped
+    ports:
+      - "7896:7896"
+    environment:
+      - TZ=Asia/Shanghai

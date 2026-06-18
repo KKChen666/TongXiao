@@ -342,9 +342,56 @@ style: 统一底部导航 icon 为 Heroicons
 ### 12.2 域名配置
 项目域名：`good-luck-lct.icu`
 
-使用 Nginx 反向代理 + Let's Encrypt SSL 证书（HTTPS）。HTTP 自动 301 跳转 HTTPS。
-证书由 certbot 自动管理，90 天有效期，到期自动续期。
-证书路径：`/etc/letsencrypt/live/good-luck-lct.icu/`
+使用 Nginx 反向代理将域名指向 Docker 容器的 7896 端口，并配置 Let's Encrypt 免费 SSL 证书（HTTPS）：
+
+```nginx
+# HTTP -> HTTPS 重定向
+server {
+    listen 80;
+    server_name good-luck-lct.icu;
+
+    # Let's Encrypt 验证目录（续期时需要）
+    location /.well-known/acme-challenge/ {
+        root /www/wwwroot/tongxiao;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# HTTPS
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name good-luck-lct.icu;
+
+    ssl_certificate     /etc/letsencrypt/live/good-luck-lct.icu/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/good-luck-lct.icu/privkey.pem;
+    ssl_session_timeout 1d;
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_tickets off;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    add_header Strict-Transport-Security "max-age=63072000" always;
+
+    location / {
+        proxy_pass http://127.0.0.1:7896;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
+    }
+}
+```
+
+证书由 Let's Encrypt（certbot）自动管理，有效期 90 天，到期自动续期。证书路径：
+- 证书：`/etc/letsencrypt/live/good-luck-lct.icu/fullchain.pem`
+- 私钥：`/etc/letsencrypt/live/good-luck-lct.icu/privkey.pem`
 
 ### 12.3 部署命令速查
 ```bash
@@ -363,3 +410,9 @@ docker restart tongxiao
 
 ### 12.4 部署平台
 项目部署在腾讯云轻量应用服务器（Lighthouse），地域：ap-nanjing。
+
+### 12.5 环境变量
+通过 `config.py` 配置，不在 docker-compose.yml 中暴露敏感信息：
+- `DB_TYPE`: mysql
+- `MYSQL_CONFIG`: 数据库连接信息
+- `SERVER_PORT`: 7896

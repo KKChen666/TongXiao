@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- 背景圆形 -->
+  <circle cx="50" cy="50" r="45" fill="#4A90D9"/>
+  
+  <!-- 书本图标 -->
+  <path d="M25 30 L25 70 L75 70 L75 30 Z" fill="white" stroke="white" stroke-width="2"/>
+  
+  <!-- 书本中线 -->
+  <line x1="50" y1="30" x2="50" y2="70" stroke="#4A90D9" stroke-width="3"/>
+  
+  <!-- 书页效果 -->
+  <path d="M27 32 L27 68 L48 68 L48 32 Z" fill="#E8F4FD"/>
+  <path d="M52 32 L52 68 L73 68 L73 32 Z" fill="#E8F4FD"/>
+  
+  <!-- 文字 -->
+  <text x="50" y="85" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif" font-weight="bold">通晓</text>
+</svg>

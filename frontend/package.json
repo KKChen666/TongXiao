@@ -7,9 +7,20 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cap:init": "npx cap init",
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "build:android": "npm run build && npx cap sync android && cd android && ./gradlew assembleDebug",
+    "build:ios": "npm run build && npx cap sync ios"
   },
   "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
     "@gsap/react": "^2.1.2",
     "@heroicons/react": "^2.2.0",
     "@heroui/react": "^3.2.1",
@@ -20,6 +31,7 @@
     "recharts": "^3.8.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "^4.3.1",
     "@types/react": "^19.2.14",
