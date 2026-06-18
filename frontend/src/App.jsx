@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import BottomNav from './components/BottomNav';
 import Sidebar from './components/Sidebar';
 import SubjectsPage from './pages/SubjectsPage';
@@ -7,9 +7,13 @@ import CardsPage from './pages/CardsPage';
 import ReviewPage from './pages/ReviewPage';
 import ImportPage from './pages/ImportPage';
 import ProfilePage from './pages/ProfilePage';
+import LoginPage from './pages/LoginPage';
 import { useEbbinghaus } from './hooks/useEbbinghaus';
+import api from './api';
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [tab, setTab] = useState('learn');
   const [currentSubject, setCurrentSubject] = useState(null);
   const [currentTopic, setCurrentTopic] = useState(null);
@@ -17,11 +21,39 @@ function App() {
   const [reviewSubject, setReviewSubject] = useState(null);
   const ebbinghaus = useEbbinghaus();
 
-  const pushPage = (page) => setPageStack(prev => [...prev, page]);
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const saved = localStorage.getItem('user');
+    if (token && saved) {
+      try {
+        setUser(JSON.parse(saved));
+      } catch {}
+    }
+    setAuthChecked(true);
+  }, []);
 
-  const popPage = () => {
-    setPageStack(prev => (prev.length <= 1 ? prev : prev.slice(0, -1)));
+  const handleLogin = (userData) => {
+    setUser(userData);
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setTab('learn');
+    setPageStack(['learn']);
+    setCurrentSubject(null);
+    setCurrentTopic(null);
+  };
+
+  if (!authChecked) return null;
+
+  if (!user) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  const pushPage = (page) => setPageStack(prev => [...prev, page]);
+  const popPage = () => setPageStack(prev => (prev.length <= 1 ? prev : prev.slice(0, -1)));
 
   const currentPage = pageStack[pageStack.length - 1];
   const isFullScreen = currentPage === 'cards' || currentPage === 'reviewCards';
@@ -66,7 +98,7 @@ function App() {
       case 'import':
         return <ImportPage />;
       case 'profile':
-        return <ProfilePage ebbinghaus={ebbinghaus} />;
+        return <ProfilePage ebbinghaus={ebbinghaus} user={user} onLogout={handleLogout} />;
       default:
         return <SubjectsPage onSelectSubject={showTopics} ebbinghaus={ebbinghaus} />;
     }
@@ -74,7 +106,7 @@ function App() {
 
   return (
     <div className="flex flex-col md:flex-row h-dvh bg-content2">
-      <Sidebar activeTab={tab} onTabChange={switchTab} />
+      <Sidebar activeTab={tab} onTabChange={switchTab} user={user} onLogout={handleLogout} />
       <main className="flex-1 flex flex-col overflow-hidden min-h-0">
         {renderPage()}
         {!isFullScreen && <BottomNav activeTab={tab} onTabChange={switchTab} />}

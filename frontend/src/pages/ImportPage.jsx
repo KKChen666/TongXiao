@@ -3,7 +3,9 @@ import { Card, CardContent, Button, Input, Radio, RadioGroup, Chip, Separator } 
 import { ArrowUpTrayIcon, DocumentTextIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import api from '../api';
+import api, { uploadFile } from '../api';
+
+const ACCEPT_TYPES = '.csv,.json,.txt,.docx,.pdf';
 
 function ImportPage() {
   const [subject, setSubject] = useState('english');
@@ -13,10 +15,10 @@ function ImportPage() {
   const [preview, setPreview] = useState([]);
   const [status, setStatus] = useState(null);
   const [importing, setImporting] = useState(false);
+  const [useFileUpload, setUseFileUpload] = useState(false);
   const fileInputRef = useRef(null);
   const dropZoneRef = useRef(null);
 
-  // Drop zone hover animation
   useGSAP(() => {
     const el = dropZoneRef.current;
     if (!el) return;
@@ -32,7 +34,6 @@ function ImportPage() {
     };
   }, { scope: dropZoneRef });
 
-  // Preview stagger
   const previewRef = useRef(null);
   useGSAP(() => {
     if (!preview.length) return;
@@ -40,11 +41,26 @@ function ImportPage() {
     gsap.from(items, { opacity: 0, y: 10, duration: 0.3, stagger: 0.05, ease: 'power2.out' });
   }, { scope: previewRef, dependencies: [preview.length] });
 
+  const isServerParseable = (name) => {
+    const ext = name.split('.').pop().toLowerCase();
+    return ['docx', 'pdf'].includes(ext);
+  };
+
   const handleFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setFileName(file.name);
     setStatus(null);
+    setImportData(null);
+    setPreview([]);
+
+    if (isServerParseable(file.name)) {
+      setUseFileUpload(true);
+      setStatus({ type: 'info', text: `已选择 ${file.name}，将由服务器解析` });
+      return;
+    }
+
+    setUseFileUpload(false);
     const reader = new FileReader();
     reader.onload = (ev) => {
       const text = ev.target.result;
@@ -81,12 +97,23 @@ function ImportPage() {
   };
 
   const doImport = async () => {
-    if (!importData) return;
     setImporting(true);
     try {
-      const result = await api('/import', { method: 'POST', body: JSON.stringify({ subject, topic: topicName, cards: importData }) });
+      let result;
+      if (useFileUpload) {
+        const file = fileInputRef.current?.files[0];
+        if (!file) throw new Error('请重新选择文件');
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('subject', subject);
+        fd.append('topic', topicName);
+        result = await uploadFile('/import/file', fd);
+      } else {
+        if (!importData) throw new Error('没有可导入的数据');
+        result = await api('/import', { method: 'POST', body: JSON.stringify({ subject, topic: topicName, cards: importData }) });
+      }
       setStatus({ type: 'success', text: `成功导入 ${result.count} 张卡片到「${result.topic}」` });
-      setImportData(null); setPreview([]); setFileName('');
+      setImportData(null); setPreview([]); setFileName(''); setUseFileUpload(false);
     } catch (err) {
       setStatus({ type: 'error', text: err.message });
     } finally { setImporting(false); }
@@ -96,7 +123,7 @@ function ImportPage() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="px-4 pt-6 pb-3 md:px-8 md:pt-8 md:pb-4 flex-shrink-0">
         <h2 className="text-2xl font-bold">导入资料</h2>
-        <p className="text-sm text-default-400 mt-1">支持 CSV / JSON / TXT 格式批量导入</p>
+        <p className="text-sm text-default-400 mt-1">支持 CSV / JSON / TXT / Word / PDF 格式批量导入</p>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-4 md:px-8 md:pb-8 space-y-4">
         <Card className="bg-primary-50 border-primary-200">
@@ -108,6 +135,8 @@ function ImportPage() {
                   <li>CSV：第一行为表头，之后每行 front,back</li>
                   <li>JSON：{`[{"front":"单词","back":"释义"}]`}</li>
                   <li>TXT：每行用 | 或 Tab 分隔 front|back</li>
+                  <li>Word (.docx)：自动识别「词汇 + 释义」对</li>
+                  <li>PDF (.pdf)：自动提取文本并解析卡片</li>
                 </ul>
               </div>
             </div>
@@ -134,14 +163,14 @@ function ImportPage() {
                 {fileName ? (
                   <div className="flex items-center justify-center gap-2"><DocumentTextIcon className="w-5 h-5 text-primary" /><span className="text-sm font-medium">{fileName}</span></div>
                 ) : (
-                  <div className="flex flex-col items-center gap-2"><ArrowUpTrayIcon className="w-8 h-8 text-default-300" /><p className="text-sm text-default-400">点击选择文件</p><p className="text-xs text-default-300">.csv .json .txt</p></div>
+                  <div className="flex flex-col items-center gap-2"><ArrowUpTrayIcon className="w-8 h-8 text-default-300" /><p className="text-sm text-default-400">点击选择文件</p><p className="text-xs text-default-300">.csv .json .txt .docx .pdf</p></div>
                 )}
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <input ref={fileInputRef} type="file" accept=".csv,.json,.txt" onChange={handleFile} className="hidden" />
+        <input ref={fileInputRef} type="file" accept={ACCEPT_TYPES} onChange={handleFile} className="hidden" />
 
         {preview.length > 0 && (
           <div><h4 className="text-sm font-semibold mb-2">数据预览</h4>
@@ -158,13 +187,18 @@ function ImportPage() {
         )}
 
         {status && (
-          <Chip color={status.type === 'success' ? 'success' : 'danger'} variant="flat" className="w-full justify-start px-4 py-2 h-auto gap-2">
+          <Chip color={status.type === 'success' ? 'success' : status.type === 'info' ? 'primary' : 'danger'} variant="flat" className="w-full justify-start px-4 py-2 h-auto gap-2">
             {status.type === 'success' ? <CheckCircleIcon className="w-4 h-4" /> : <ExclamationTriangleIcon className="w-4 h-4" />}
             <span className="text-sm">{status.text}</span>
           </Chip>
         )}
 
-        <Button color="primary" size="lg" className="w-full h-12 rounded-xl font-bold" isDisabled={!importData || importing} isLoading={importing} onPress={doImport}>确认导入</Button>
+        <Button color="primary" size="lg" className="w-full h-12 rounded-xl font-bold"
+          isDisabled={(!importData && !useFileUpload) || importing}
+          isLoading={importing}
+          onPress={doImport}>
+          确认导入
+        </Button>
       </div>
     </div>
   );
