@@ -1,30 +1,30 @@
 import { useState } from 'react';
-import './App.css';
 import BottomNav from './components/BottomNav';
+import Sidebar from './components/Sidebar';
 import SubjectsPage from './pages/SubjectsPage';
 import TopicsPage from './pages/TopicsPage';
 import CardsPage from './pages/CardsPage';
-import ProfilePage from './pages/ProfilePage';
+import ReviewPage from './pages/ReviewPage';
 import ImportPage from './pages/ImportPage';
+import ProfilePage from './pages/ProfilePage';
+import { useEbbinghaus } from './hooks/useEbbinghaus';
 
 function App() {
-  const [tab, setTab] = useState('subjects');
+  const [tab, setTab] = useState('learn');
   const [currentSubject, setCurrentSubject] = useState(null);
   const [currentTopic, setCurrentTopic] = useState(null);
-  const [pageStack, setPageStack] = useState(['subjects']);
+  const [pageStack, setPageStack] = useState(['learn']);
+  const [reviewSubject, setReviewSubject] = useState(null);
+  const ebbinghaus = useEbbinghaus();
 
-  const pushPage = (page) => {
-    setPageStack(prev => [...prev, page]);
-  };
+  const pushPage = (page) => setPageStack(prev => [...prev, page]);
 
   const popPage = () => {
-    setPageStack(prev => {
-      if (prev.length <= 1) return prev;
-      return prev.slice(0, -1);
-    });
+    setPageStack(prev => (prev.length <= 1 ? prev : prev.slice(0, -1)));
   };
 
   const currentPage = pageStack[pageStack.length - 1];
+  const isFullScreen = currentPage === 'cards' || currentPage === 'reviewCards';
 
   const showTopics = (subject) => {
     setCurrentSubject(subject);
@@ -36,62 +36,50 @@ function App() {
     pushPage('cards');
   };
 
-  const goBack = () => {
-    popPage();
+  const showReviewCards = (subject) => {
+    setReviewSubject(subject);
+    pushPage('reviewCards');
   };
+
+  const goBack = () => popPage();
 
   const switchTab = (newTab) => {
-    if (newTab === tab) {
-      if (newTab === 'subjects') {
-        setPageStack(['subjects']);
-      }
-      return;
-    }
+    if (newTab === tab) return;
     setTab(newTab);
-    if (newTab === 'subjects') {
-      setPageStack(['subjects']);
-    } else if (newTab === 'import') {
-      setPageStack(['import']);
-    } else if (newTab === 'profile') {
-      setPageStack(['profile']);
-    }
+    setPageStack([newTab]);
+    setCurrentSubject(null);
+    setCurrentTopic(null);
   };
-
-  const isFullScreen = currentPage === 'cards';
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'subjects':
-        return <SubjectsPage onSelectSubject={showTopics} />;
+      case 'learn':
+        return <SubjectsPage onSelectSubject={showTopics} ebbinghaus={ebbinghaus} />;
       case 'topics':
-        return (
-          <TopicsPage
-            subject={currentSubject}
-            onBack={goBack}
-            onSelectTopic={showCards}
-          />
-        );
+        return <TopicsPage subject={currentSubject} onBack={goBack} onSelectTopic={showCards} ebbinghaus={ebbinghaus} />;
       case 'cards':
-        return (
-          <CardsPage
-            topic={currentTopic}
-            onBack={goBack}
-          />
-        );
+        return <CardsPage topic={currentTopic} onBack={goBack} ebbinghaus={ebbinghaus} />;
+      case 'review':
+        return <ReviewPage onSelectSubject={showReviewCards} ebbinghaus={ebbinghaus} />;
+      case 'reviewCards':
+        return <CardsPage topic={reviewSubject} onBack={goBack} ebbinghaus={ebbinghaus} reviewMode />;
       case 'import':
         return <ImportPage />;
       case 'profile':
-        return <ProfilePage />;
+        return <ProfilePage ebbinghaus={ebbinghaus} />;
       default:
-        return <SubjectsPage onSelectSubject={showTopics} />;
+        return <SubjectsPage onSelectSubject={showTopics} ebbinghaus={ebbinghaus} />;
     }
   };
 
   return (
-    <>
-      {renderPage()}
-      {!isFullScreen && <BottomNav activeTab={tab} onTabChange={switchTab} />}
-    </>
+    <div className="flex flex-col md:flex-row h-dvh bg-content2">
+      <Sidebar activeTab={tab} onTabChange={switchTab} />
+      <main className="flex-1 flex flex-col overflow-hidden min-h-0">
+        {renderPage()}
+        {!isFullScreen && <BottomNav activeTab={tab} onTabChange={switchTab} />}
+      </main>
+    </div>
   );
 }
 
