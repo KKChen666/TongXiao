@@ -106,11 +106,11 @@ def api_me(user_id: int = Depends(get_current_user_id)):
 # --- Public API Routes ---
 
 @app.get("/api/subjects")
-def api_subjects():
+def api_subjects(user_id: int = Depends(get_current_user_id)):
     subs = get_subjects()
     result = []
     for s in subs:
-        total, reviewed = get_subject_progress(s["id"])
+        total, reviewed = get_subject_progress(s["id"], user_id)
         d = dict(s)
         d["total_cards"] = total
         d["reviewed_cards"] = reviewed
@@ -120,11 +120,11 @@ def api_subjects():
 
 
 @app.get("/api/subjects/{subject_id}/topics")
-def api_topics(subject_id: int):
+def api_topics(subject_id: int, user_id: int = Depends(get_current_user_id)):
     tops = get_topics(subject_id)
     result = []
     for t in tops:
-        total, reviewed = get_topic_progress(t["id"])
+        total, reviewed = get_topic_progress(t["id"], user_id)
         d = dict(t)
         d["total_cards"] = total
         d["reviewed_cards"] = reviewed
@@ -148,17 +148,17 @@ def api_review(card_id: int, body: ReviewBody, user_id: int = Depends(get_curren
 
 
 @app.get("/api/stats")
-def api_stats():
+def api_stats(user_id: int = Depends(get_current_user_id)):
     subs = get_subjects()
     total_all = 0
     reviewed_all = 0
     for s in subs:
-        total, reviewed = get_subject_progress(s["id"])
+        total, reviewed = get_subject_progress(s["id"], user_id)
         total_all += total
         reviewed_all += reviewed
     subjects = []
     for s in subs:
-        total, reviewed = get_subject_progress(s["id"])
+        total, reviewed = get_subject_progress(s["id"], user_id)
         d = dict(s)
         d["total_cards"] = total
         d["reviewed_cards"] = reviewed
