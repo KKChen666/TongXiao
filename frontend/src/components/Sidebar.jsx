@@ -1,8 +1,8 @@
 import { Button, Separator } from '@heroui/react';
 import { tabs } from './BottomNav';
-import { SparklesIcon } from '@heroicons/react/24/outline';
+import { SparklesIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
 
-function Sidebar({ activeTab, onTabChange }) {
+function Sidebar({ activeTab, onTabChange, user, onLogout }) {
   return (
     <aside className="hidden md:flex md:w-60 md:flex-col md:flex-shrink-0 bg-content1 border-r border-divider h-full">
       <div className="px-5 py-6">
@@ -32,7 +32,21 @@ function Sidebar({ activeTab, onTabChange }) {
         })}
       </nav>
       <Separator />
-      <div className="p-4">
+      <div className="p-4 space-y-2">
+        {user && (
+          <div className="flex items-center justify-between px-2">
+            <span className="text-sm text-default-500 truncate">{user.display_name || user.username}</span>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              onPress={onLogout}
+              title="退出登录"
+            >
+              <ArrowRightStartOnRectangleIcon className="w-4 h-4 text-default-400" />
+            </Button>
+          </div>
+        )}
         <p className="text-[11px] text-default-300 text-center">TongXiao v1.0</p>
       </div>
     </aside>

@@ -111,10 +111,10 @@ def get_card_count(topic_id):
     )["cnt"]
 
 
-def log_review(card_id, result):
+def log_review(card_id, result, user_id=None):
     _execute(
-        f"INSERT INTO review_log (card_id, result) VALUES ({P()}, {P()})",
-        (card_id, result),
+        f"INSERT INTO review_log (card_id, user_id, result) VALUES ({P()}, {P()}, {P()})",
+        (card_id, user_id, result),
     )
 
 
