@@ -6,46 +6,32 @@
 
 ## 0. 开发前必读 — 技能（Skills）
 
-**每次开始本项目开发时，必须加载以下 skill 后再写代码：**
+**GSAP 全套 skill 已内置在项目中**，opencode 启动时自动加载 `.opencode/skills/` 目录下的所有 skill。
 
-### 0.1 动画相关 → 加载 GSAP 全套 skill
+### 0.1 已安装的 Skills
 
-当涉及任何动画需求（翻牌、入场、过渡、滚动动画等），**必须先**加载 GSAP skill 目录：
+| Skill | 用途 |
+|-------|------|
+| `gsap-core` | 核心 API：gsap.to/from、easing、stagger |
+| `gsap-react` | React 集成：useGSAP、contextSafe、scope |
+| `gsap-timeline` | 时间线编排、position 参数、labels |
+| `gsap-plugins` | ScrollTo、Flip、Draggable 等插件 |
+| `gsap-scrolltrigger` | 滚动驱动动画、视差、pin |
+| `gsap-performance` | 性能优化：transforms、will-change |
 
-```
-skill 目录路径：skills/gsap-core, skills/gsap-react, skills/gsap-timeline, skills/gsap-plugins, skills/gsap-performance
-```
+**使用时**：在 opencode 中直接说"用 gsap 做 X"，agent 会自动读取对应的 SKILL.md。
 
-**加载方式（opencode 中执行）：**
+### 0.2 首次使用（其他团队成员）
 
-1. 先 clone GSAP skill 到本地（只需一次）：
 ```bash
-git clone https://github.com/greensock/gsap-skills.git .opencode/gsap-skills
+git clone <本仓库>
+# .opencode/skills/ 已包含所有 GSAP skill，无需额外操作
+# 打开 opencode 即自动加载
 ```
 
-2. 每次开发涉及动画时，加载这些 skill：
-```bash
-# 逐个加载核心 skills
-skill gsap-core
-skill gsap-react
-skill gsap-timeline
-```
+### 0.3 图标
 
-### 0.2 主题/UI 相关 → 参考 HeroUI 文档
-
-本项目使用 **HeroUI v3**（基于 React Aria Components），注意 API 与 v2 不同：
-- `CardBody` → `CardContent`；`Divider` → `Separator`；`Progress` → `ProgressBar`
-- `Card` 不支持 `isPressable`/`onPress`，用 `onClick`
-- 无需 `HeroUIProvider` wrapper
-- 参考 doc：https://heroui.com
-
-### 0.3 图标 → 必用 Heroicons
-
-```
-import { IconName } from '@heroicons/react/24/outline'
-```
-
-查阅：https://heroicons.com
+全部用 `@heroicons/react/24/outline`，查阅 https://heroicons.com
 
 ---
 
