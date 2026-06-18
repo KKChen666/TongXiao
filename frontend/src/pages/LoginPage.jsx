@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Card, CardContent, Button, Input, Tabs, Tab } from '@heroui/react';
+import { Card, CardContent, Button, Input, Tabs, Tab, TabList } from '@heroui/react';
 import { UserIcon, LockClosedIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -61,8 +61,10 @@ function LoginPage({ onLogin }) {
               variant="underlined"
               classNames={{ tabList: 'gap-4 w-full', tab: 'flex-1' }}
             >
-              <Tab key="login" title="登录" />
-              <Tab key="register" title="注册" />
+              <TabList>
+                <Tab id="login" key="login">登录</Tab>
+                <Tab id="register" key="register">注册</Tab>
+              </TabList>
             </Tabs>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
