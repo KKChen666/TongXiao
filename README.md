@@ -146,3 +146,4 @@ def migrate(conn, cur, db_type, placeholder):
 - **学习统计** — 总卡片数、已复习、完成率、各科目进度
 - **PWA** — 支持添加到主屏幕，离线可用
 - **双数据库** — 切换 `config.py` 中的 `DB_TYPE` 即可在 MySQL 和 SQLite 间切换
+- **手机APP** — 支持打包为Android和iOS原生应用（Capacitor）

@@ -149,6 +149,9 @@ def api_import(body: ImportBody):
 
 # --- Serve Static Frontend (production build) ---
 
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "frontend", "dist")
+if not os.path.isdir(STATIC_DIR):
+    # Fallback for local dev: frontend/dist is one level up
+    STATIC_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
 if os.path.isdir(STATIC_DIR):
     app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
