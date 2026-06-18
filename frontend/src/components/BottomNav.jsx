@@ -1,26 +1,34 @@
-function BottomNav({ activeTab, onTabChange, visible }) {
-  if (!visible) return null;
+import { Button } from '@heroui/react';
+import { BookOpenIcon, ClockIcon, ArrowDownTrayIcon, UserIcon } from '@heroicons/react/24/outline';
 
-  const tabs = [
-    { key: 'subjects', icon: '📖', label: '背诵' },
-    { key: 'import', icon: '📥', label: '导入' },
-    { key: 'profile', icon: '👤', label: '我的' },
-  ];
+const tabs = [
+  { key: 'learn', icon: BookOpenIcon, label: '学习' },
+  { key: 'review', icon: ClockIcon, label: '复习' },
+  { key: 'import', icon: ArrowDownTrayIcon, label: '导入' },
+  { key: 'profile', icon: UserIcon, label: '我的' },
+];
 
+function BottomNav({ activeTab, onTabChange }) {
   return (
-    <div className="bottom-nav">
-      {tabs.map(t => (
-        <button
-          key={t.key}
-          className={`nav-item ${activeTab === t.key ? 'active' : ''}`}
-          onClick={() => onTabChange(t.key)}
-        >
-          <span className="nav-icon">{t.icon}</span>
-          {t.label}
-        </button>
-      ))}
-    </div>
+    <nav className="md:hidden flex bg-background border-t border-divider flex-shrink-0 pb-[env(safe-area-inset-bottom,0px)]">
+      {tabs.map(t => {
+        const Icon = t.icon;
+        const isActive = activeTab === t.key;
+        return (
+          <Button
+            key={t.key}
+            variant="light"
+            onPress={() => onTabChange(t.key)}
+            className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-none h-auto min-h-0 ${isActive ? 'text-primary' : 'text-default-400'}`}
+          >
+            <Icon className="w-6 h-6" />
+            <span className="text-[11px] font-medium">{t.label}</span>
+          </Button>
+        );
+      })}
+    </nav>
   );
 }
 
 export default BottomNav;
+export { tabs };

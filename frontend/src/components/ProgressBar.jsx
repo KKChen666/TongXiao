@@ -1,14 +1,14 @@
-function ProgressBar({ pct, color, height }) {
+import { ProgressBar as HeroProgressBar } from '@heroui/react';
+
+function ProgressBar({ pct, color, size = 'sm' }) {
   return (
-    <div className="progress-bar" style={height ? { height } : undefined}>
-      <div
-        className="progress-bar-fill"
-        style={{
-          width: `${pct}%`,
-          background: color || undefined,
-        }}
-      />
-    </div>
+    <HeroProgressBar
+      aria-label="进度"
+      value={pct}
+      size={size}
+      color={color || 'primary'}
+      className="mt-1"
+    />
   );
 }
 
