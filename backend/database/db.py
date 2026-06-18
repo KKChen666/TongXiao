@@ -66,17 +66,23 @@ def get_books(subject_id):
     )
 
 
-def get_book_progress(book_id):
+def get_book_progress(book_id, user_id=None):
     place = P()
     row1 = _fetchone(
         f"SELECT COUNT(*) as cnt FROM cards WHERE topic_id IN (SELECT id FROM topics WHERE book_id={place})",
         (book_id,),
     )
     total = row1["cnt"] if row1 else 0
-    row2 = _fetchone(
-        f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id IN (SELECT id FROM topics WHERE book_id={place}))",
-        (book_id,),
-    )
+    if user_id is not None:
+        row2 = _fetchone(
+            f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id IN (SELECT id FROM topics WHERE book_id={place})) AND user_id={P()}",
+            (book_id, user_id),
+        )
+    else:
+        row2 = _fetchone(
+            f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id IN (SELECT id FROM topics WHERE book_id={place}))",
+            (book_id,),
+        )
     reviewed = row2["cnt"] if row2 else 0
     return total, reviewed
 
@@ -118,24 +124,36 @@ def log_review(card_id, result, user_id=None):
     )
 
 
-def get_topic_progress(topic_id):
+def get_topic_progress(topic_id, user_id=None):
     total = get_card_count(topic_id)
-    row = _fetchone(
-        f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id={P()})",
-        (topic_id,),
-    )
+    if user_id is not None:
+        row = _fetchone(
+            f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id={P()}) AND user_id={P()}",
+            (topic_id, user_id),
+        )
+    else:
+        row = _fetchone(
+            f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id={P()})",
+            (topic_id,),
+        )
     return total, row["cnt"] if row else 0
 
 
-def get_subject_progress(subject_id):
+def get_subject_progress(subject_id, user_id=None):
     place = P()
     row1 = _fetchone(
         f"SELECT COUNT(*) as cnt FROM cards WHERE topic_id IN (SELECT id FROM topics WHERE subject_id={place})",
         (subject_id,),
     )
     total = row1["cnt"] if row1 else 0
-    row2 = _fetchone(
-        f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id IN (SELECT id FROM topics WHERE subject_id={place}))",
-        (subject_id,),
-    )
+    if user_id is not None:
+        row2 = _fetchone(
+            f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id IN (SELECT id FROM topics WHERE subject_id={place})) AND user_id={P()}",
+            (subject_id, user_id),
+        )
+    else:
+        row2 = _fetchone(
+            f"SELECT COUNT(DISTINCT card_id) as cnt FROM review_log WHERE card_id IN (SELECT id FROM cards WHERE topic_id IN (SELECT id FROM topics WHERE subject_id={place}))",
+            (subject_id,),
+        )
     return total, row2["cnt"] if row2 else 0
