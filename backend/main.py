@@ -103,6 +103,17 @@ def api_me(user_id: int = Depends(get_current_user_id)):
     return user
 
 
+# --- Health Check (部署测试接口) ---
+
+@app.get("/api/health")
+def api_health():
+    return {
+        "status": "ok",
+        "version": "v2-deploy-test",
+        "message": "TongXiao 后端服务运行正常",
+    }
+
+
 # --- Public API Routes ---
 
 @app.get("/api/subjects")
