@@ -1,0 +1,42 @@
+services:
+  # ==============================
+  # 容器1: 后端 API (Python FastAPI)
+  # ==============================
+  tongxiao-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tongxiao-backend
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+      - GIT_REPO_URL=${GIT_REPO_URL}
+      - GIT_BRANCH=${GIT_BRANCH:-master}
+      - GIT_TOKEN=${GIT_TOKEN:-}
+      - DB_TYPE=${DB_TYPE:-mysql}
+      - MYSQL_HOST=${MYSQL_HOST:-119.45.182.166}
+      - MYSQL_PORT=${MYSQL_PORT:-9274}
+      - MYSQL_USER=${MYSQL_USER:-TongXiao}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-TongXiao}
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=7896
+      - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      # 挂载整个 /root/tongxiao（含 .git，用于 git pull）
+      - /root/tongxiao:/app
+
+  # ==============================
+  # 容器2: 前端 (Nginx 静态文件)
+  # ==============================
+  tongxiao-frontend:
+    image: nginx:alpine
+    container_name: tongxiao-frontend
+    restart: unless-stopped
+    ports:
+      - "5465:80"
+    volumes:
+      # 挂载前端构建产物
+      - /root/tongxiao/frontend/dist:/usr/share/nginx/html:ro
+      # 挂载 nginx 配置
+      - /root/tongxiao/nginx.conf:/etc/nginx/conf.d/default.conf:ro
