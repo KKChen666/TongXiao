@@ -109,8 +109,8 @@ def api_me(user_id: int = Depends(get_current_user_id)):
 def api_health():
     return {
         "status": "ok",
-        "version": "v2-deploy-test",
-        "message": "TongXiao 后端服务运行正常",
+        "version": "v3-auto-deploy",
+        "message": "TongXiao 后端自动部署验证成功！",
     }
 
 
