@@ -8,6 +8,8 @@ services:
       dockerfile: Dockerfile
     container_name: tongxiao-backend
     restart: unless-stopped
+    ports:
+      - "7896:7896"
     environment:
       - TZ=Asia/Shanghai
       - GIT_REPO_URL=${GIT_REPO_URL}
