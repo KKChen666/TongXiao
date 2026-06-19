@@ -24,3 +24,6 @@ deploy/keys/
 
 # 服务器端备份
 backups/
+
+# 日志文件
+*.log
