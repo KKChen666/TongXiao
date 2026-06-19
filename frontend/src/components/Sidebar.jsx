@@ -20,12 +20,11 @@ function Sidebar({ activeTab, onTabChange, user, onLogout }) {
           return (
             <Button
               key={t.key}
-              variant={isActive ? 'flat' : 'light'}
-              color={isActive ? 'primary' : 'default'}
+              variant={isActive ? 'secondary' : 'ghost'}
               onPress={() => onTabChange(t.key)}
-              className="w-full justify-start gap-3 px-4 py-3 h-auto rounded-xl font-medium"
-              startContent={<Icon className="w-5 h-5" />}
+              className={`w-full justify-start gap-3 px-4 py-3 h-auto rounded-xl font-medium ${isActive ? '' : 'text-default-500'}`}
             >
+              <Icon className="w-5 h-5" />
               {t.label}
             </Button>
           );
@@ -39,7 +38,7 @@ function Sidebar({ activeTab, onTabChange, user, onLogout }) {
             <Button
               isIconOnly
               size="sm"
-              variant="light"
+              variant="ghost"
               onPress={onLogout}
               title="退出登录"
             >

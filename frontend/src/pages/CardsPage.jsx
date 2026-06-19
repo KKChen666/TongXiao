@@ -109,15 +109,17 @@ function CardsPage({ topic, onBack, ebbinghaus, reviewMode }) {
           <h2 className="text-2xl font-bold">学习完成</h2>
           <p className="text-sm text-default-400 mt-2">共 {total} 张卡片</p>
           <div className="flex items-center gap-4 mt-3">
-            <Chip color="success" variant="flat" size="sm">认识 {known}</Chip>
-            <Chip color="danger" variant="flat" size="sm">不认识 {total - known}</Chip>
+            <Chip color="success" variant="secondary" size="sm">认识 {known}</Chip>
+            <Chip color="danger" variant="secondary" size="sm">不认识 {total - known}</Chip>
           </div>
           <div className="w-52 mt-4">
-            <ProgressBar value={pct} color={color} size="sm" label="掌握率" showValueLabel />
+            <ProgressBar value={pct} color={color} size="sm" aria-label="掌握率">
+              <ProgressBar.Output />
+            </ProgressBar>
           </div>
           <div className="flex gap-3 mt-6">
-            <Button color="primary" variant="flat" onPress={restart}>再来一次</Button>
-            <Button variant="bordered" onPress={onBack}>返回</Button>
+            <Button variant="secondary" onPress={restart}>再来一次</Button>
+            <Button variant="outline" onPress={onBack}>返回</Button>
           </div>
         </div>
       </div>
@@ -155,7 +157,7 @@ function CardsPage({ topic, onBack, ebbinghaus, reviewMode }) {
         <div className="flex gap-3 flex-shrink-0 pb-[calc(12px+env(safe-area-inset-bottom,0px))]">
           <Button
             isIconOnly
-            variant="light"
+            variant="ghost"
             size="sm"
             className="h-14 w-14 rounded-2xl flex-shrink-0"
             isDisabled={index === 0}
@@ -164,23 +166,21 @@ function CardsPage({ topic, onBack, ebbinghaus, reviewMode }) {
             <ArrowUturnLeftIcon className="w-5 h-5" />
           </Button>
           <Button
-            color="danger"
+            variant="danger-soft"
             size="lg"
-            variant="flat"
             className="flex-1 h-14 rounded-2xl font-bold text-base"
-            startContent={<XMarkIcon className="w-5 h-5" />}
             onPress={() => answer(0)}
           >
+            <XMarkIcon className="w-5 h-5 mr-1" />
             不认识
           </Button>
           <Button
-            color="success"
+            variant="primary"
             size="lg"
-            variant="solid"
             className="flex-1 h-14 rounded-2xl font-bold text-base"
-            startContent={<CheckIcon className="w-5 h-5" />}
             onPress={() => answer(1)}
           >
+            <CheckIcon className="w-5 h-5 mr-1" />
             认识
           </Button>
         </div>
@@ -193,7 +193,7 @@ function TopBar({ topic, onBack, index, total }) {
   return (
     <div className="px-4 pt-6 pb-0 md:px-8 md:pt-8 flex-shrink-0">
       <div className="flex items-center gap-3 mb-3">
-        <Button isIconOnly variant="light" size="sm" onPress={onBack}>
+        <Button isIconOnly variant="ghost" size="sm" onPress={onBack}>
           <ChevronLeftIcon className="w-5 h-5" />
         </Button>
         <div className="flex-1 min-w-0">
@@ -203,7 +203,9 @@ function TopBar({ topic, onBack, index, total }) {
       {index !== undefined && total !== undefined && (
         <div className="flex items-center gap-3 mb-2">
           <span className="text-xs text-default-400 whitespace-nowrap">{index + 1} / {total}</span>
-          <ProgressBar value={(index / total) * 100} size="sm" color="primary" className="flex-1" />
+          <ProgressBar value={(index / total) * 100} size="sm" color="accent" className="flex-1">
+            <ProgressBar.Output />
+          </ProgressBar>
         </div>
       )}
     </div>

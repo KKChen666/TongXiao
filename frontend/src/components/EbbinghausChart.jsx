@@ -68,7 +68,7 @@ function EbbinghausChart({ retentionStats }) {
                 {avgRetention !== null && (
                   <Chip
                     color={avgRetention >= 80 ? 'success' : avgRetention >= 60 ? 'warning' : 'danger'}
-                    variant="flat"
+                    variant="secondary"
                     size="sm"
                   >
                     平均记忆率 {avgRetention}%
@@ -77,10 +77,10 @@ function EbbinghausChart({ retentionStats }) {
                 {totalForget > 0 && (
                   <Chip
                     color="warning"
-                    variant="flat"
+                    variant="secondary"
                     size="sm"
-                    startContent={<ExclamationTriangleIcon className="w-3.5 h-3.5" />}
                   >
+                    <ExclamationTriangleIcon className="w-3.5 h-3.5 mr-1" />
                     预计遗忘 {totalForget} 张
                   </Chip>
                 )}

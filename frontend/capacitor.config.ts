@@ -5,15 +5,7 @@ const config: CapacitorConfig = {
   appName: 'TongXiao',
   webDir: 'dist',
   server: {
-    androidScheme: 'https',
-    proxy: {
-      '/api': {
-        target: 'https://good-luck-lct.icu',
-        changeOrigin: true,
-        secure: false,
-        logLevel: 'debug'
-      }
-    }
+    androidScheme: 'https'
   }
 };
 

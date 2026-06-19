@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TongXiao</string>
+    <string name="title_activity_main">TongXiao</string>
+    <string name="package_name">com.tongxiao.app</string>
+    <string name="custom_url_scheme">com.tongxiao.app</string>
+</resources>

@@ -61,13 +61,13 @@ function ReviewPage({ onSelectSubject, ebbinghaus }) {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold">{s.display_name}</h3>
                         <div className="flex items-center gap-3 mt-1">
-                          <Chip size="sm" variant="flat" color="warning" className="gap-1">
+                          <Chip size="sm" variant="secondary" color="warning" className="gap-1">
                             <ClockIcon className="w-3 h-3" />待复习 {s.reviewed_cards || 0} 张
                           </Chip>
                           <span className="text-xs text-default-400">共 {s.total_cards} 张</span>
                         </div>
                       </div>
-                      <Button color="warning" size="sm" variant="flat" startContent={<PlayIcon className="w-4 h-4" />}>复习</Button>
+                      <Button variant="secondary" size="sm"><PlayIcon className="w-4 h-4 mr-1" />复习</Button>
                     </div>
                   </CardContent>
                 </Card>

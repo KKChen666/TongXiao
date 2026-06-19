@@ -41,7 +41,7 @@ function TopicsPage({ subject, onBack, onSelectTopic, ebbinghaus }) {
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="px-4 pt-6 pb-3 md:px-8 md:pt-8 md:pb-4 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <Button isIconOnly variant="light" size="sm" onPress={onBack}>
+          <Button isIconOnly variant="ghost" size="sm" onPress={onBack}>
             <ChevronLeftIcon className="w-5 h-5" />
           </Button>
           <div className={`w-10 h-10 rounded-xl bg-${color}/10 flex items-center justify-center`}>
@@ -72,11 +72,11 @@ function TopicsPage({ subject, onBack, onSelectTopic, ebbinghaus }) {
                         <h3 className="font-semibold">{t.name}</h3>
                         <div className="flex items-center gap-3 mt-1">
                           <span className="text-xs text-default-400">{t.total_cards} 张 | 已学 {t.reviewed_cards}</span>
-                          {!isNew && <Chip size="sm" variant="flat" color="success" className="text-[10px] h-5">{t.progress_pct}%</Chip>}
+                          {!isNew && <Chip size="sm" variant="secondary" color="success" className="text-[10px] h-5">{t.progress_pct}%</Chip>}
                         </div>
                         <div className="mt-2"><ProgressBar pct={t.progress_pct} /></div>
                       </div>
-                      <Button color="primary" size="sm" variant={isNew ? 'solid' : 'flat'} className="flex-shrink-0">
+                      <Button variant={isNew ? 'primary' : 'secondary'} size="sm" className="flex-shrink-0">
                         {isNew ? '开始学习' : '继续学习'}
                       </Button>
                     </div>

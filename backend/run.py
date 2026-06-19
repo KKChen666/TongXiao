@@ -9,10 +9,14 @@ if backend_dir not in sys.path:
 if __name__ == "__main__":
     import uvicorn
     from config import SERVER_HOST, SERVER_PORT
+
+    # 生产环境建议 RELOAD=false，通过 docker restart 来更新
+    reload = os.environ.get("RELOAD", "false").lower() == "true"
+
     uvicorn.run(
         "main:app",
         host=SERVER_HOST,
         port=SERVER_PORT,
-        reload=True,
+        reload=reload,
         app_dir=backend_dir,
     )

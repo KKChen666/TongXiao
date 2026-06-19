@@ -61,7 +61,7 @@ function FlashCard({ card, isEnglish }) {
             style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
           >
             <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0">
-              <Chip size="sm" variant="flat" color="primary" className="mb-6 gap-1.5">
+              <Chip size="sm" variant="secondary" color="accent" className="mb-6 gap-1.5">
                 <LightBulbIcon className="w-3.5 h-3.5" />
                 题目
               </Chip>
@@ -73,9 +73,9 @@ function FlashCard({ card, isEnglish }) {
               )}
               {isEnglish && (
                 <div className="pointer-events-auto mt-6">
-                  <Button variant="light" color="primary" size="sm"
-                    startContent={<SpeakerWaveIcon className="w-4 h-4" />}
+                  <Button variant="ghost" size="sm"
                     onPress={handleSpeak}>
+                    <SpeakerWaveIcon className="w-4 h-4 mr-1" />
                     朗读发音
                   </Button>
                 </div>
@@ -93,7 +93,7 @@ function FlashCard({ card, isEnglish }) {
             style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateX(180deg)' }}
           >
             <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0">
-              <Chip size="sm" variant="flat" color="success" className="mb-4 gap-1.5">
+              <Chip size="sm" variant="secondary" color="success" className="mb-4 gap-1.5">
                 <EyeIcon className="w-3.5 h-3.5" />
                 答案
               </Chip>

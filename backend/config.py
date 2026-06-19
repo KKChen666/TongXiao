@@ -2,18 +2,24 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-DB_TYPE = "mysql"
+# ===== 环境变量覆盖硬编码配置 =====
+# Docker 部署时通过 docker-compose.yml 的 environment 传入
+# 本地开发时直接修改下方默认值即可
+
+DB_TYPE = os.environ.get("DB_TYPE", "mysql")
+
 MYSQL_CONFIG = {
-    "host": "119.45.182.166",
-    "port": 9274,
-    "user": "TongXiao",
-    "password": "P8MtxmyYZMznkx8j",
-    "database": "TongXiao",
+    "host": os.environ.get("MYSQL_HOST", "119.45.182.166"),
+    "port": int(os.environ.get("MYSQL_PORT", "9274")),
+    "user": os.environ.get("MYSQL_USER", "TongXiao"),
+    "password": os.environ.get("MYSQL_PASSWORD", "P8MtxmyYZMznkx8j"),
+    "database": os.environ.get("MYSQL_DATABASE", "TongXiao"),
 }
+
 SQLITE_PATH = os.path.join(BASE_DIR, "data", "tongxiao.db")
 
-SERVER_HOST = "0.0.0.0"
-SERVER_PORT = 7896
+SERVER_HOST = os.environ.get("SERVER_HOST", "0.0.0.0")
+SERVER_PORT = int(os.environ.get("SERVER_PORT", "7896"))
 
 APP_TITLE = "考研背诵"
 

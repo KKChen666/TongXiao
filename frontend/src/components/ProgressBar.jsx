@@ -1,14 +1,18 @@
 import { ProgressBar as HeroProgressBar } from '@heroui/react';
 
-function ProgressBar({ pct, color, size = 'sm' }) {
+const COLOR_MAP = { primary: 'accent', secondary: 'default' };
+
+function ProgressBar({ pct, color = 'primary', size = 'sm' }) {
   return (
     <HeroProgressBar
       aria-label="进度"
       value={pct}
       size={size}
-      color={color || 'primary'}
+      color={COLOR_MAP[color] || color}
       className="mt-1"
-    />
+    >
+      <HeroProgressBar.Output />
+    </HeroProgressBar>
   );
 }
 
