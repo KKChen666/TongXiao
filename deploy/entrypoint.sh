@@ -17,6 +17,9 @@ warn()  { echo "[ENTRY] ⚠ $1"; }
 # 修复容器内 git dubious ownership 问题
 git config --global --add safe.directory /app 2>/dev/null || true
 
+# GitHub 镜像加速（国内服务器访问 GitHub 更稳定）
+git config --global url."https://ghfast.top/https://github.com/".insteadOf "https://github.com/" 2>/dev/null || true
+
 # ===========================
 # 拉取后端代码（sparse-checkout: 只拉 backend/）
 # ===========================
