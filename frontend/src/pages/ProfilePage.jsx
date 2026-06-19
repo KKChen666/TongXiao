@@ -54,9 +54,11 @@ function ProfilePage({ ebbinghaus }) {
             <div className="flex items-center gap-2 mb-3">
               <ArrowTrendingUpIcon className="w-5 h-5 text-success" />
               <span className="font-semibold">总体完成率</span>
-              <Chip size="sm" color="success" variant="flat" className="ml-auto">{stats?.completion_rate || 0}%</Chip>
+              <Chip size="sm" color="success" variant="secondary" className="ml-auto">{stats?.completion_rate || 0}%</Chip>
             </div>
-            <ProgressBar value={stats?.completion_rate || 0} color="success" size="md" showValueLabel />
+            <ProgressBar value={stats?.completion_rate || 0} color="success" size="md" aria-label="完成率">
+              <ProgressBar.Output />
+            </ProgressBar>
           </CardContent>
         </Card>
 
@@ -78,9 +80,11 @@ function ProfilePage({ ebbinghaus }) {
                           <h4 className="font-semibold text-sm">{s.display_name}</h4>
                           <p className="text-xs text-default-400">{s.reviewed_cards}/{s.total_cards} 张</p>
                         </div>
-                        <Chip size="sm" color={color} variant="flat">{s.progress_pct}%</Chip>
+                        <Chip size="sm" color={color === 'primary' ? 'accent' : color === 'secondary' ? 'default' : color} variant="secondary">{s.progress_pct}%</Chip>
                       </div>
-                      <ProgressBar value={s.progress_pct} color={color} size="sm" />
+                      <ProgressBar value={s.progress_pct} color={color === 'primary' ? 'accent' : color === 'secondary' ? 'default' : color} size="sm">
+                        <ProgressBar.Output />
+                      </ProgressBar>
                     </CardContent>
                   </Card>
                 );
@@ -103,10 +107,10 @@ function ProfilePage({ ebbinghaus }) {
                 </div>
                 <Button
                   size="sm"
-                  variant="flat"
+                  variant="secondary"
                   onPress={theme.toggleMode}
-                  startContent={theme.mode === 'dark' ? <MoonIcon className="w-4 h-4" /> : <SunIcon className="w-4 h-4" />}
                 >
+                  {theme.mode === 'dark' ? <MoonIcon className="w-4 h-4 mr-1" /> : <SunIcon className="w-4 h-4 mr-1" />}
                   {theme.mode === 'dark' ? '深色模式' : '浅色模式'}
                 </Button>
               </div>
@@ -133,8 +137,8 @@ function ProfilePage({ ebbinghaus }) {
                     <Chip
                       key={c.key}
                       size="sm"
-                      variant={theme.color === c.key ? 'flat' : 'light'}
-                      color={theme.color === c.key ? 'primary' : 'default'}
+                      variant={theme.color === c.key ? 'secondary' : 'soft'}
+                      color={theme.color === c.key ? 'accent' : 'default'}
                       className="cursor-pointer"
                       onClick={() => theme.setColor(c.key)}
                     >

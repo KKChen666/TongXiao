@@ -60,8 +60,8 @@ function SubjectsPage({ onSelectSubject, ebbinghaus }) {
                       </div>
                     </CardContent>
                     <CardFooter className="px-4 pb-4 pt-0 flex justify-center gap-2">
-                      <Chip size="sm" variant="flat" color="primary">新学 {s.total_cards - s.reviewed_cards}</Chip>
-                      {s.reviewed_cards > 0 && <Chip size="sm" variant="flat" color="success">已学 {s.reviewed_cards}</Chip>}
+                      <Chip size="sm" variant="secondary" color="accent">新学 {s.total_cards - s.reviewed_cards}</Chip>
+                      {s.reviewed_cards > 0 && <Chip size="sm" variant="secondary" color="success">已学 {s.reviewed_cards}</Chip>}
                     </CardFooter>
                   </Card>
                 );

@@ -1,0 +1,6 @@
+# deploy/ 目录下的 Docker build context
+# 只需要 Dockerfile + entrypoint.sh，其他都忽略
+*
+!Dockerfile
+!entrypoint.sh
+!.dockerignore

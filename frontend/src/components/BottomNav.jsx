@@ -17,7 +17,7 @@ function BottomNav({ activeTab, onTabChange }) {
         return (
           <Button
             key={t.key}
-            variant="light"
+            variant="ghost"
             onPress={() => onTabChange(t.key)}
             className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-none h-auto min-h-0 ${isActive ? 'text-primary' : 'text-default-400'}`}
           >

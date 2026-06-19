@@ -8,3 +8,19 @@ data/
 .venv/
 frontend/node_modules/
 frontend/dist/
+
+# 构建产物（本地 build 输出）
+dist/
+
+# 环境变量（含敏感信息，不要提交）
+.env
+
+# 密钥文件
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+deploy/keys/
+
+# 服务器端备份
+backups/

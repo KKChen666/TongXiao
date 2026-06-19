@@ -1,9 +1,9 @@
-@import "@heroui/styles";
+@import "../node_modules/@heroui/styles/dist/index.css";
 
 @source "../node_modules/@heroui/react/dist/**/*.{js,jsx,ts,tsx}";
 @source "../node_modules/@heroui/styles/dist/**/*.{js,jsx,ts,tsx}";
-@source "./src/**/*.{js,jsx,ts,tsx}";
-@source "./index.html";
+@source "./**/*.{js,jsx,ts,tsx}";
+@source "../index.html";
 
 body {
   margin: 0;

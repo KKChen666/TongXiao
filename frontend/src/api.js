@@ -1,4 +1,11 @@
-const API_BASE = '/api';
+const SERVER_ORIGIN = 'https://good-luck-lct.icu';
+
+// Detect Capacitor native environment
+const isNativeApp = typeof window !== 'undefined'
+  && (window.location.protocol === 'capacitor:'
+    || window.location.hostname === 'localhost');
+
+const API_BASE = isNativeApp ? SERVER_ORIGIN + '/api' : '/api';
 
 async function api(url, opts = {}) {
   const token = localStorage.getItem('token');

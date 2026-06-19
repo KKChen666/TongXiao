@@ -146,14 +146,14 @@ function ImportPage() {
         <Card>
           <CardContent className="p-5 space-y-5">
             <div><label className="text-sm font-semibold mb-2 block">选择科目</label>
-              <RadioGroup aria-label="选择科目" value={subject} onValueChange={setSubject} orientation="horizontal">
+              <RadioGroup aria-label="选择科目" value={subject} onChange={setSubject} orientation="horizontal">
                 <Radio value="english">考研英语</Radio>
                 <Radio value="politics">考研政治</Radio>
               </RadioGroup>
             </div>
             <Separator />
             <div><label className="text-sm font-semibold mb-2 block">章节名称</label>
-              <Input placeholder="输入章节名称（可选）" value={topicName} onChange={e => setTopicName(e.target.value)} variant="bordered" size="sm" />
+              <Input placeholder="输入章节名称（可选）" value={topicName} onChange={e => setTopicName(e.target.value)} variant="primary" size="sm" />
             </div>
             <Separator />
             <div>
@@ -187,15 +187,15 @@ function ImportPage() {
         )}
 
         {status && (
-          <Chip color={status.type === 'success' ? 'success' : status.type === 'info' ? 'primary' : 'danger'} variant="flat" className="w-full justify-start px-4 py-2 h-auto gap-2">
+          <Chip color={status.type === 'success' ? 'success' : status.type === 'info' ? 'accent' : 'danger'} variant="secondary" className="w-full justify-start px-4 py-2 h-auto gap-2">
             {status.type === 'success' ? <CheckCircleIcon className="w-4 h-4" /> : <ExclamationTriangleIcon className="w-4 h-4" />}
             <span className="text-sm">{status.text}</span>
           </Chip>
         )}
 
-        <Button color="primary" size="lg" className="w-full h-12 rounded-xl font-bold"
+        <Button variant="primary" size="lg" className="w-full h-12 rounded-xl font-bold"
           isDisabled={(!importData && !useFileUpload) || importing}
-          isLoading={importing}
+          isPending={importing}
           onPress={doImport}>
           确认导入
         </Button>
