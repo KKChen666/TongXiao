@@ -90,7 +90,8 @@ update_code() {
 }
 
 # ===========================
-# 安装 Python 依赖（只有 requirements.txt 变化时才装）
+# 安装 Python 依赖
+# 策略：先检测核心包是否可用，不可用则安装；可用时再检查 requirements.txt 是否变化
 # ===========================
 update_deps() {
     local REQ="${BACKEND_DIR}/requirements.txt"
@@ -100,6 +101,18 @@ update_deps() {
         return 0
     fi
 
+    # 检测核心包是否已安装（防止容器重建后依赖丢失）
+    if ! python3 -c "import uvicorn, fastapi" 2>/dev/null; then
+        log "核心依赖缺失，安装中..."
+        pip install --no-cache-dir \
+            -i https://pypi.tuna.tsinghua.edu.cn/simple \
+            -r "$REQ"
+        md5sum "$REQ" | awk '{print $1}' > "$HASH_FILE"
+        log "依赖安装完成"
+        return 0
+    fi
+
+    # 核心包已安装，检查 requirements.txt 是否有变化
     local CURRENT_HASH=$(md5sum "$REQ" | awk '{print $1}')
 
     if [ -f "$HASH_FILE" ] && [ "$(cat $HASH_FILE)" = "$CURRENT_HASH" ]; then
@@ -107,13 +120,13 @@ update_deps() {
         return 0
     fi
 
-    log "安装 Python 依赖..."
+    log "requirements.txt 已变更，更新依赖..."
     pip install --no-cache-dir \
         -i https://pypi.tuna.tsinghua.edu.cn/simple \
         -r "$REQ"
 
     echo "$CURRENT_HASH" > "$HASH_FILE"
-    log "依赖安装完成"
+    log "依赖更新完成"
 }
 
 # ===========================
