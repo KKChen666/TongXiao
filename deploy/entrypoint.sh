@@ -41,11 +41,11 @@ update_code() {
 
         BEFORE=$(git rev-parse HEAD 2>/dev/null || echo "?")
 
-        git fetch origin "${GIT_BRANCH}" 2>/dev/null || {
-            warn "git fetch 失败，用已有代码启动"
+        timeout 30 git fetch origin "${GIT_BRANCH}" 2>/dev/null || {
+            warn "git fetch 超时或失败，用已有代码启动"
             return 0
         }
-        git reset --hard "origin/${GIT_BRANCH}" 2>/dev/null || {
+        timeout 15 git reset --hard "origin/${GIT_BRANCH}" 2>/dev/null || {
             warn "git reset 失败，用已有代码启动"
             return 0
         }
