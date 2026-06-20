@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TongXiao Logo 最终方案</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f5f5f5;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 40px 20px;
+    }
+    h1 { text-align: center; color: #333; margin-bottom: 10px; font-size: 2rem; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 40px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 30px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+    }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+    .card-header {
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white; font-weight: 600; font-size: 1.1rem;
+    }
+    .card-body {
+      padding: 40px; display: flex; justify-content: center; align-items: center;
+      min-height: 260px; background: #fafafa;
+    }
+    .logo-container { width: 100%; max-width: 480px; }
+    .logo-container svg { width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .card-footer { padding: 25px; background: white; }
+    .card-footer h3 { color: #333; margin-bottom: 8px; }
+    .card-footer p { color: #666; font-size: 0.9rem; line-height: 1.6; }
+    .selected { border: 4px solid #667eea; transform: scale(1.02); }
+    .selected .card-header { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+    .note { text-align: center; margin-top: 30px; color: #999; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>TongXiao Logo</h1>
+  <p class="subtitle">基于方案B，融入闪卡学习元素，时尚字体</p>
+
+  <div class="grid">
+    <!-- 方案1：左侧闪卡图标 + 记忆曲线 -->
+    <div class="card" onclick="selectCard(this)">
+      <div class="card-header">方案1：翻牌 + 记忆曲线</div>
+      <div class="card-body">
+        <div class="logo-container">
+          <svg viewBox="0 0 480 230" xmlns="http://www.w3.org/2000/svg">
+            <rect width="480" height="230" rx="16" fill="#FAFAFA"/>
+            <!-- 左侧闪卡图标 -->
+            <g transform="translate(40, 35)">
+              <rect x="0" y="6" width="28" height="20" rx="3" fill="#E2E8F0" transform="rotate(-10, 14, 16)"/>
+              <rect x="2" y="3" width="28" height="20" rx="3" fill="#667eea" opacity="0.3" transform="rotate(3, 16, 13)"/>
+              <rect x="4" y="0" width="28" height="20" rx="3" fill="#667eea"/>
+              <line x1="8" y1="5" x2="28" y2="5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="8" y1="10" x2="23" y2="10" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="8" y1="15" x2="19" y2="15" stroke="white" stroke-width="1" stroke-linecap="round" opacity="0.7"/>
+            </g>
+            <!-- 主文字 -->
+            <text x="255" y="72" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="54" font-weight="900" fill="#1E293B" text-anchor="middle" letter-spacing="-1">TongXiao</text>
+            <!-- 横线 -->
+            <rect x="130" y="86" width="250" height="2.5" fill="#667eea" rx="1.25"/>
+            <!-- 副标题 -->
+            <text x="255" y="115" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#64748B" text-anchor="middle" letter-spacing="4" font-weight="600">FLASHCARD LEARNING</text>
+            <!-- 记忆曲线 -->
+            <path d="M130,155 Q170,138 210,148 Q250,158 290,145 Q330,132 370,150" stroke="#667eea" stroke-width="1.5" fill="none" opacity="0.25"/>
+            <circle cx="150" cy="150" r="2.5" fill="#667eea" opacity="0.35"/>
+            <circle cx="190" cy="144" r="2.5" fill="#667eea" opacity="0.35"/>
+            <circle cx="230" cy="152" r="2.5" fill="#667eea" opacity="0.35"/>
+            <circle cx="270" cy="148" r="2.5" fill="#667eea" opacity="0.35"/>
+            <circle cx="310" cy="140" r="2.5" fill="#667eea" opacity="0.35"/>
+            <circle cx="350" cy="148" r="2.5" fill="#667eea" opacity="0.35"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-footer">
+        <h3>翻牌图标 + 艾宾浩斯记忆曲线</h3>
+        <p>左侧叠放闪卡直接点明学习功能，底部曲线暗示艾宾浩斯遗忘曲线，"FLASHCARD LEARNING" 副标题说明用途。字体 Arial Black 粗体紧凑。</p>
+      </div>
+    </div>
+
+    <!-- 方案2：底部闪卡图标组 -->
+    <div class="card" onclick="selectCard(this)">
+      <div class="card-header">方案2：底部闪卡</div>
+      <div class="card-body">
+        <div class="logo-container">
+          <svg viewBox="0 0 480 230" xmlns="http://www.w3.org/2000/svg">
+            <rect width="480" height="230" rx="16" fill="#FAFAFA"/>
+            <!-- 主文字 -->
+            <text x="240" y="75" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="56" font-weight="900" fill="#1E293B" text-anchor="middle" letter-spacing="-1">TongXiao</text>
+            <!-- 横线 -->
+            <rect x="120" y="90" width="240" height="2.5" fill="#667eea" rx="1.25"/>
+            <!-- 副标题 -->
+            <text x="240" y="120" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#64748B" text-anchor="middle" letter-spacing="4" font-weight="600">FLASHCARD LEARNING</text>
+            <!-- 底部三张叠放闪卡 -->
+            <g transform="translate(195, 140)">
+              <rect x="0" y="8" width="32" height="22" rx="4" fill="#E2E8F0"/>
+              <rect x="14" y="4" width="32" height="22" rx="4" fill="#667eea" opacity="0.3"/>
+              <rect x="28" y="0" width="32" height="22" rx="4" fill="#667eea"/>
+              <line x1="32" y1="6" x2="55" y2="6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="32" y1="11" x2="50" y2="11" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="32" y1="16" x2="45" y2="16" stroke="white" stroke-width="1" stroke-linecap="round" opacity="0.7"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="card-footer">
+        <h3>底部闪卡图标</h3>
+        <p>文字居中，底部三张叠放闪卡点明功能。副标题"FLASHCARD LEARNING"直白说明用途。</p>
+      </div>
+    </div>
+
+    <!-- 方案3：T的横杠变闪卡 -->
+    <div class="card" onclick="selectCard(this)">
+      <div class="card-header">方案3：T融合闪卡</div>
+      <div class="card-body">
+        <div class="logo-container">
+          <svg viewBox="0 0 480 230" xmlns="http://www.w3.org/2000/svg">
+            <rect width="480" height="230" rx="16" fill="#FAFAFA"/>
+            <!-- T的竖杠 -->
+            <rect x="170" y="30" width="14" height="65" rx="3" fill="#1E293B"/>
+            <!-- T的横杠 = 闪卡形状 -->
+            <rect x="140" y="22" width="90" height="35" rx="6" fill="#667eea"/>
+            <line x1="150" y1="33" x2="220" y2="33" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <line x1="150" y1="41" x2="205" y2="41" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+            <line x1="150" y1="49" x2="190" y2="49" stroke="white" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+            <!-- ong -->
+            <text x="250" y="70" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="42" font-weight="900" fill="#1E293B" text-anchor="start" letter-spacing="-1">ng</text>
+            <!-- Xiao -->
+            <text x="290" y="70" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="42" font-weight="900" fill="#1E293B" text-anchor="start" letter-spacing="-1">Xiao</text>
+            <!-- 横线 -->
+            <rect x="120" y="90" width="250" height="2" fill="#E2E8F0" rx="1"/>
+            <!-- 副标题 -->
+            <text x="245" y="120" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#64748B" text-anchor="middle" letter-spacing="4" font-weight="600">FLASHCARD LEARNING</text>
+            <!-- 记忆曲线 -->
+            <path d="M130,160 Q170,142 210,152 Q250,162 290,148 Q330,134 370,152" stroke="#667eea" stroke-width="1.5" fill="none" opacity="0.2"/>
+            <circle cx="150" cy="155" r="2" fill="#667eea" opacity="0.3"/>
+            <circle cx="200" cy="148" r="2" fill="#667eea" opacity="0.3"/>
+            <circle cx="250" cy="158" r="2" fill="#667eea" opacity="0.3"/>
+            <circle cx="300" cy="145" r="2" fill="#667eea" opacity="0.3"/>
+            <circle cx="350" cy="150" r="2" fill="#667eea" opacity="0.3"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-footer">
+        <h3>T的横杠变成闪卡</h3>
+        <p>T的横杠巧妙变成一张闪卡形状，文字本身即体现功能。TongXiao被拆分为 T | ng | Xiao，创意独特。</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">点击卡片选中，告诉我选 <strong>1 / 2 / 3</strong>，或者给修改意见</p>
+
+  <script>
+    function selectCard(card) {
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    }
+  </script>
+</body>
+</html>

@@ -7,9 +7,9 @@ import api, { uploadFile } from '../api';
 
 const ACCEPT_TYPES = '.csv,.json,.txt,.docx,.pdf';
 
-function ImportPage() {
+function ImportPage({ onImportSuccess }) {
   const [subject, setSubject] = useState('english');
-  const [topicName, setTopicName] = useState('');
+  const [tags, setTags] = useState('');
   const [fileName, setFileName] = useState('');
   const [importData, setImportData] = useState(null);
   const [preview, setPreview] = useState([]);
@@ -87,7 +87,7 @@ function ImportPage() {
         if (!rows.length) throw new Error('未找到有效数据');
         setImportData(rows);
         setPreview(rows.slice(0, 5));
-        setStatus({ type: 'success', text: `识别到 ${rows.length} 条卡片数据` });
+        setStatus({ type: 'success', text: `识别到 ${rows.length} 条词条数据` });
       } catch (err) {
         setStatus({ type: 'error', text: err.message });
         setImportData(null); setPreview([]);
@@ -106,14 +106,22 @@ function ImportPage() {
         const fd = new FormData();
         fd.append('file', file);
         fd.append('subject', subject);
-        fd.append('topic', topicName);
-        result = await uploadFile('/import/file', fd);
+        fd.append('tags', tags);
+        result = await uploadFile('/knowledge/import/file', fd);
       } else {
         if (!importData) throw new Error('没有可导入的数据');
-        result = await api('/import', { method: 'POST', body: JSON.stringify({ subject, topic: topicName, cards: importData }) });
+        const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+        result = await api('/knowledge/import', {
+          method: 'POST',
+          body: JSON.stringify({ subject, tags: tagList, items: importData })
+        });
       }
-      setStatus({ type: 'success', text: `成功导入 ${result.count} 张卡片到「${result.topic}」` });
+      setStatus({
+        type: 'success',
+        text: `导入完成！新增 ${result.new} 条，重复 ${result.duplicate} 条`
+      });
       setImportData(null); setPreview([]); setFileName(''); setUseFileUpload(false);
+      if (onImportSuccess) onImportSuccess();
     } catch (err) {
       setStatus({ type: 'error', text: err.message });
     } finally { setImporting(false); }
@@ -122,8 +130,8 @@ function ImportPage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="px-4 pt-6 pb-3 md:px-8 md:pt-8 md:pb-4 flex-shrink-0">
-        <h2 className="text-2xl font-bold">导入资料</h2>
-        <p className="text-sm text-default-400 mt-1">支持 CSV / JSON / TXT / Word / PDF 格式批量导入</p>
+        <h2 className="text-2xl font-bold">导入知识库</h2>
+        <p className="text-sm text-default-400 mt-1">将文件中的词条导入到知识库，之后可以创建词书</p>
       </div>
       <div className="flex-1 overflow-y-auto px-4 pb-4 md:px-8 md:pb-8 space-y-4">
         <Card className="bg-primary-50 border-primary-200">
@@ -136,7 +144,7 @@ function ImportPage() {
                   <li>JSON：{`[{"front":"单词","back":"释义"}]`}</li>
                   <li>TXT：每行用 | 或 Tab 分隔 front|back</li>
                   <li>Word (.docx)：自动识别「词汇 + 释义」对</li>
-                  <li>PDF (.pdf)：自动提取文本并解析卡片</li>
+                  <li>PDF (.pdf)：自动提取文本并解析词条</li>
                 </ul>
               </div>
             </div>
@@ -152,8 +160,14 @@ function ImportPage() {
               </RadioGroup>
             </div>
             <Separator />
-            <div><label className="text-sm font-semibold mb-2 block">章节名称</label>
-              <Input placeholder="输入章节名称（可选）" value={topicName} onChange={e => setTopicName(e.target.value)} variant="primary" size="sm" />
+            <div><label className="text-sm font-semibold mb-2 block">标签（可选，逗号分隔）</label>
+              <Input
+                placeholder="例如：四级,高频,核心词汇"
+                value={tags}
+                onChange={e => setTags(e.target.value)}
+                variant="primary"
+                size="sm"
+              />
             </div>
             <Separator />
             <div>
@@ -197,7 +211,7 @@ function ImportPage() {
           isDisabled={(!importData && !useFileUpload) || importing}
           isPending={importing}
           onPress={doImport}>
-          确认导入
+          导入到知识库
         </Button>
       </div>
     </div>

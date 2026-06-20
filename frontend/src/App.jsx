@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import BottomNav from './components/BottomNav';
 import Sidebar from './components/Sidebar';
 import SubjectsPage from './pages/SubjectsPage';
@@ -6,6 +8,7 @@ import TopicsPage from './pages/TopicsPage';
 import CardsPage from './pages/CardsPage';
 import ReviewPage from './pages/ReviewPage';
 import ImportPage from './pages/ImportPage';
+import WordbookPage from './pages/WordbookPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
 import { useEbbinghaus } from './hooks/useEbbinghaus';
@@ -22,6 +25,19 @@ function App() {
   const ebbinghaus = useEbbinghaus();
 
   useEffect(() => {
+    const initStatusBar = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await StatusBar.setOverlaysWebView({ overlay: false });
+          await StatusBar.setBackgroundColor({ color: '#006FEE' });
+          await StatusBar.setStyle({ style: Style.Light });
+        } catch (e) {
+          console.log('StatusBar init error:', e);
+        }
+      }
+    };
+    initStatusBar();
+
     const token = localStorage.getItem('token');
     const saved = localStorage.getItem('user');
     if (token && saved) {
@@ -95,8 +111,10 @@ function App() {
         return <ReviewPage onSelectSubject={showReviewCards} ebbinghaus={ebbinghaus} />;
       case 'reviewCards':
         return <CardsPage topic={reviewSubject} onBack={goBack} ebbinghaus={ebbinghaus} reviewMode />;
+      case 'wordbook':
+        return <WordbookPage onBack={() => switchTab('learn')} />;
       case 'import':
-        return <ImportPage />;
+        return <ImportPage onImportSuccess={() => {}} />;
       case 'profile':
         return <ProfilePage ebbinghaus={ebbinghaus} user={user} onLogout={handleLogout} />;
       default:

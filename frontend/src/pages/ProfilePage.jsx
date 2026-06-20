@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, ProgressBar, Spinner, Chip, Button, Separator } from '@heroui/react';
-import { ChartBarIcon, CheckCircleIcon, ClockIcon, ArrowTrendingUpIcon, FireIcon, SwatchIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
+import { ChartBarIcon, CheckCircleIcon, ClockIcon, ArrowTrendingUpIcon, FireIcon, SwatchIcon, SunIcon, MoonIcon, ArrowRightStartOnRectangleIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import api from '../api';
 import { getSubjectIcon, getSubjectColor } from '../utils';
 import { useAppTheme } from '../hooks/useTheme';
 
-function ProfilePage({ ebbinghaus }) {
+function ProfilePage({ ebbinghaus, user, onLogout }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const statsGridRef = useRef(null);
@@ -150,6 +150,39 @@ function ProfilePage({ ebbinghaus }) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Account Info & Logout */}
+        {user && (
+          <div>
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <UserCircleIcon className="w-5 h-5" />
+              账户信息
+            </h3>
+            <Card>
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">{user.display_name || user.username}</p>
+                    <p className="text-xs text-default-400">@{user.username}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <UserCircleIcon className="w-6 h-6 text-primary" />
+                  </div>
+                </div>
+                <Separator />
+                <Button
+                  variant="ghost"
+                  color="danger"
+                  fullWidth
+                  onPress={onLogout}
+                  startContent={<ArrowRightStartOnRectangleIcon className="w-5 h-5" />}
+                >
+                  退出登录
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
