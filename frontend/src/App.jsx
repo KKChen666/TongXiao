@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import BottomNav from './components/BottomNav';
@@ -11,10 +11,12 @@ import ImportPage from './pages/ImportPage';
 import WordbookPage from './pages/WordbookPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
+import SplashPage from './pages/SplashPage';
 import { useEbbinghaus } from './hooks/useEbbinghaus';
 import api from './api';
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [tab, setTab] = useState('learn');
@@ -23,6 +25,8 @@ function App() {
   const [pageStack, setPageStack] = useState(['learn']);
   const [reviewSubject, setReviewSubject] = useState(null);
   const ebbinghaus = useEbbinghaus();
+
+  const handleSplashComplete = useCallback(() => setShowSplash(false), []);
 
   useEffect(() => {
     const initStatusBar = async () => {
@@ -61,6 +65,10 @@ function App() {
     setCurrentSubject(null);
     setCurrentTopic(null);
   };
+
+  if (showSplash) {
+    return <SplashPage onComplete={handleSplashComplete} />;
+  }
 
   if (!authChecked) return null;
 

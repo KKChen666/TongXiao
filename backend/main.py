@@ -889,6 +889,68 @@ def api_wordbook_to_topic(wordbook_id: int, user_id: int = Depends(get_current_u
     return {"ok": True, "topic_id": tid, "topic_name": topic_name, "card_count": len(items)}
 
 
+class UnitTopicBody(BaseModel):
+    unit_name: str
+    offset: int = 0
+    limit: int = 20
+
+
+@app.post("/api/wordbooks/{wordbook_id}/unit-to-topic")
+def api_wordbook_unit_to_topic(wordbook_id: int, body: UnitTopicBody, user_id: int = Depends(get_current_user_id)):
+    p = _placeholder()
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(
+        f"SELECT w.*, s.name as subject_key FROM wordbooks w "
+        f"JOIN subjects s ON w.subject_id = s.id "
+        f"WHERE w.id={p} AND w.user_id={p}",
+        (wordbook_id, user_id),
+    )
+    wb = cur.fetchone()
+    if not wb:
+        raise HTTPException(404, "词书不存在")
+
+    cur.execute(
+        f"SELECT k.front, k.back FROM wordbook_items wi "
+        f"JOIN knowledge_items k ON wi.knowledge_id = k.id "
+        f"WHERE wi.wordbook_id={p} ORDER BY wi.order_num LIMIT {p} OFFSET {p}",
+        (wordbook_id, body.limit, body.offset),
+    )
+    items = cur.fetchall()
+
+    if not items:
+        raise HTTPException(400, "该单元没有词条")
+
+    sid = wb["subject_id"]
+    topic_name = f"{wb['name']} - {body.unit_name}"
+
+    cur.execute(f"SELECT id FROM topics WHERE subject_id={p} AND name={p}", (sid, topic_name))
+    existing = cur.fetchone()
+    if existing:
+        tid = existing["id"]
+        cur.execute(f"DELETE FROM cards WHERE topic_id={p}", (tid,))
+    else:
+        cur.execute(f"SELECT MAX(order_num) FROM topics WHERE subject_id={p}", (sid,))
+        max_ord = cur.fetchone()["MAX(order_num)"] or 0
+        cur.execute(
+            f"INSERT INTO topics (subject_id, name, order_num, book_id) VALUES ({p},{p},{p}, NULL)",
+            (sid, topic_name, max_ord + 1),
+        )
+        tid = cur.lastrowid
+
+    for idx, item in enumerate(items):
+        cur.execute(
+            f"INSERT INTO cards (topic_id, front, back, order_num) VALUES ({p},{p},{p},{p})",
+            (tid, item["front"], item["back"], idx + 1),
+        )
+
+    if DB_TYPE == "mysql":
+        conn.commit()
+
+    return {"ok": True, "topic_id": tid, "topic_name": topic_name, "card_count": len(items)}
+
+
 # --- Serve Static Frontend (production build) ---
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "frontend", "dist")
