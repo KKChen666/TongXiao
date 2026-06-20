@@ -4,11 +4,13 @@ import { SpeakerWaveIcon, ArrowsRightLeftIcon, EyeIcon, LightBulbIcon } from '@h
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
-function FlashCard({ card, isEnglish }) {
+function FlashCard({ card, isEnglish, onSwipe }) {
   const containerRef = useRef(null);
   const cardRef = useRef(null);
   const flipped = useRef(false);
   const tweenRef = useRef(null);
+  const touchStart = useRef(null);
+  const swipeIndicatorRef = useRef(null);
 
   const speak = useCallback((text) => {
     if (!text) return;
@@ -36,8 +38,86 @@ function FlashCard({ card, isEnglish }) {
     });
   });
 
+  const handleTouchStart = useCallback((e) => {
+    const touch = e.touches[0];
+    touchStart.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+  }, []);
+
+  const handleTouchMove = useCallback((e) => {
+    if (!touchStart.current) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - touchStart.current.x;
+    const dy = touch.clientY - touchStart.current.y;
+
+    // Only handle horizontal swipes
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+      e.preventDefault();
+      // Visual feedback: slight rotation + translate
+      const clampedDx = Math.max(-120, Math.min(120, dx));
+      const rotate = clampedDx * 0.05;
+      if (cardRef.current) {
+        gsap.set(cardRef.current, {
+          x: clampedDx,
+          rotation: rotate,
+        });
+      }
+      // Show swipe indicator
+      if (swipeIndicatorRef.current) {
+        if (dx > 40) {
+          swipeIndicatorRef.current.textContent = '认识';
+          swipeIndicatorRef.current.className = 'absolute top-4 right-4 text-success font-bold text-lg z-10 opacity-80';
+        } else if (dx < -40) {
+          swipeIndicatorRef.current.textContent = '不认识';
+          swipeIndicatorRef.current.className = 'absolute top-4 left-4 text-danger font-bold text-lg z-10 opacity-80';
+        } else {
+          swipeIndicatorRef.current.className = 'absolute top-4 left-1/2 -translate-x-1/2 text-lg font-bold z-10 opacity-0';
+        }
+      }
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (!touchStart.current) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStart.current.x;
+    const elapsed = Date.now() - touchStart.current.time;
+    touchStart.current = null;
+
+    // Reset visual position
+    if (cardRef.current) {
+      gsap.to(cardRef.current, { x: 0, rotation: 0, duration: 0.3, ease: 'power2.out' });
+    }
+    if (swipeIndicatorRef.current) {
+      swipeIndicatorRef.current.className = 'absolute top-4 left-1/2 -translate-x-1/2 text-lg font-bold z-10 opacity-0';
+    }
+
+    // Detect swipe: min distance 60px, max time 500ms
+    const isSwipe = Math.abs(dx) > 60 && elapsed < 500 && Math.abs(dx) > Math.abs(touch.clientY - (touchStart.current?.y || touch.clientY));
+
+    if (isSwipe && onSwipe) {
+      // Animate card out
+      const direction = dx > 0 ? 1 : -1;
+      gsap.to(cardRef.current, {
+        x: direction * 400,
+        rotation: direction * 15,
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.in',
+        onComplete: () => {
+          onSwipe(direction > 0 ? 'right' : 'left');
+        },
+      });
+    } else if (Math.abs(dx) < 10 && elapsed < 300) {
+      // Tap -> flip
+      handleFlip();
+    }
+  }, [onSwipe, handleFlip]);
+
   // Entrance animation
   useGSAP(() => {
+    if (cardRef.current) {
+      gsap.set(cardRef.current, { x: 0, rotation: 0, opacity: 1 });
+    }
     gsap.from(cardRef.current, {
       opacity: 0,
       y: 30,
@@ -50,10 +130,13 @@ function FlashCard({ card, isEnglish }) {
   return (
     <div ref={containerRef} className="flex-1 flex flex-col min-h-0 py-2">
       <div
-        className="flex-1 cursor-pointer preserve-3d"
+        className="flex-1 cursor-pointer preserve-3d relative"
         style={{ perspective: 1200 }}
-        onClick={handleFlip}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
+        <div ref={swipeIndicatorRef} className="absolute top-4 left-1/2 -translate-x-1/2 text-lg font-bold z-10 opacity-0 transition-opacity" />
         <div ref={cardRef} className="relative w-full h-full" style={{ transformStyle: 'preserve-3d' }}>
           {/* 正面 */}
           <div
@@ -83,7 +166,7 @@ function FlashCard({ card, isEnglish }) {
             </div>
             <div className="flex items-center gap-1.5 text-xs text-default-300 mt-4 select-none">
               <ArrowsRightLeftIcon className="w-3.5 h-3.5" />
-              点击翻转查看答案
+              左滑不认识 · 右滑认识 · 点击翻转
             </div>
           </div>
 
@@ -110,7 +193,7 @@ function FlashCard({ card, isEnglish }) {
             </div>
             <div className="flex items-center gap-1.5 text-xs text-default-300 mt-4 select-none">
               <ArrowsRightLeftIcon className="w-3.5 h-3.5" />
-              点击翻回题目
+              左滑不认识 · 右滑认识 · 点击翻转
             </div>
           </div>
         </div>

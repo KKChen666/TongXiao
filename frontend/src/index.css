@@ -27,8 +27,9 @@ body {
   }
 }
 
-/* Theme transitions */
-*, *::before, *::after {
+/* Theme transitions - scoped to avoid interfering with click handlers */
+.theme-transition,
+.theme-transition * {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 

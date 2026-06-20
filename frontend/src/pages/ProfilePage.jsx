@@ -117,22 +117,25 @@ function ProfilePage({ ebbinghaus, user, onLogout }) {
               <Separator />
               <div>
                 <p className="text-sm mb-3">主题色</p>
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-3 flex-wrap">
                   {theme.THEMES.map(c => (
-                    <button
+                    <Button
                       key={c.key}
-                      onClick={() => theme.setColor(c.key)}
-                      className={`w-9 h-9 rounded-xl border-2 transition-all duration-200 flex items-center justify-center ${
-                        theme.color === c.key ? 'border-white ring-2 ring-offset-1 scale-110' : 'border-transparent hover:scale-105'
+                      isIconOnly
+                      size="sm"
+                      radius="lg"
+                      onPress={() => theme.setColor(c.key)}
+                      className={`w-11 h-11 min-w-11 ${
+                        theme.color === c.key ? 'ring-2 ring-offset-2 ring-primary scale-110' : ''
                       }`}
                       style={{ backgroundColor: c.accent }}
                       title={c.name}
                     >
-                      {theme.color === c.key && <CheckCircleIcon className="w-4 h-4 text-white drop-shadow" />}
-                    </button>
+                      {theme.color === c.key && <CheckCircleIcon className="w-5 h-5 text-white drop-shadow" />}
+                    </Button>
                   ))}
                 </div>
-                <div className="flex gap-2 mt-2 flex-wrap">
+                <div className="flex gap-2 mt-3 flex-wrap">
                   {theme.THEMES.map(c => (
                     <Chip
                       key={c.key}
@@ -140,7 +143,7 @@ function ProfilePage({ ebbinghaus, user, onLogout }) {
                       variant={theme.color === c.key ? 'secondary' : 'soft'}
                       color={theme.color === c.key ? 'accent' : 'default'}
                       className="cursor-pointer"
-                      onClick={() => theme.setColor(c.key)}
+                      onPress={() => theme.setColor(c.key)}
                     >
                       {c.name}
                     </Chip>

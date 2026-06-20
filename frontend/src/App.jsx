@@ -123,7 +123,7 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-dvh bg-content2">
+    <div className="flex flex-col md:flex-row h-dvh bg-content2 theme-transition">
       <Sidebar activeTab={tab} onTabChange={switchTab} user={user} onLogout={handleLogout} />
       <main className="flex-1 flex flex-col overflow-hidden min-h-0">
         {renderPage()}
