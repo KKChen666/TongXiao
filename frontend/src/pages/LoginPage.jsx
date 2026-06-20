@@ -76,8 +76,8 @@ function LoginPage({ onLogin }) {
 
         {/* Title */}
         <div className="login-title text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground">考研背诵</h1>
-          <p className="text-sm text-default-400 mt-1">高效记忆，轻松备考</p>
+          <h1 className="text-3xl font-bold text-foreground">TongXiao</h1>
+          <p className="text-sm text-default-400 mt-1">背至通宵 · 终将通晓</p>
         </div>
 
         {/* Card */}

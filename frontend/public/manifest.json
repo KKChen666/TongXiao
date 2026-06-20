@@ -1,11 +1,11 @@
 {
-  "name": "TongXiao - 考研背诵",
+  "name": "TongXiao - 背至通宵 · 终将通晓",
   "short_name": "TongXiao",
-  "description": "考研英语和政治卡片式背诵应用",
+  "description": "闪卡学习应用，艾宾浩斯记忆法助力高效记忆",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F2F3F7",
-  "theme_color": "#4A90D9",
+  "background_color": "#F8F8F6",
+  "theme_color": "#1E1E1E",
   "orientation": "portrait-primary",
   "icons": [
     {

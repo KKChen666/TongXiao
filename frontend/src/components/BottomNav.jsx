@@ -1,9 +1,10 @@
 import { Button } from '@heroui/react';
-import { BookOpenIcon, ClockIcon, ArrowDownTrayIcon, UserIcon } from '@heroicons/react/24/outline';
+import { BookOpenIcon, ClockIcon, ArrowDownTrayIcon, UserIcon, RectangleStackIcon } from '@heroicons/react/24/outline';
 
 const tabs = [
   { key: 'learn', icon: BookOpenIcon, label: '学习' },
   { key: 'review', icon: ClockIcon, label: '复习' },
+  { key: 'wordbook', icon: RectangleStackIcon, label: '词书' },
   { key: 'import', icon: ArrowDownTrayIcon, label: '导入' },
   { key: 'profile', icon: UserIcon, label: '我的' },
 ];

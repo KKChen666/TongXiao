@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TongXiao Logo 动画</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #F8F8F6;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    .container { text-align: center; }
+    .logo-wrapper { width: 480px; height: 480px; margin: 0 auto; }
+    .logo-svg { width: 100%; height: 100%; }
+
+    #bg { opacity: 0; animation: fadeIn 0.5s 0.1s ease forwards; }
+
+    #inkStroke {
+      stroke-dasharray: 2000;
+      stroke-dashoffset: 2000;
+      fill-opacity: 0;
+      animation: inkReveal 2.0s 0.5s ease forwards;
+    }
+
+    #glowCircle {
+      opacity: 0;
+      transform-origin: 512px 286px;
+      animation: glowAppear 0.6s 2.2s ease forwards,
+                 glowPulse 3s 2.8s ease-in-out infinite;
+    }
+    #glowDot {
+      opacity: 0;
+      animation: fadeIn 0.3s 2.4s ease forwards,
+                 dotPulse 2s 2.7s ease-in-out infinite;
+    }
+
+    #englishText {
+      opacity: 0;
+      animation: textSlideUp 0.6s 2.6s ease forwards;
+    }
+
+    #chineseText {
+      opacity: 0;
+      animation: textSlideUp 0.6s 3.0s ease forwards;
+    }
+
+    #sealGroup {
+      opacity: 0;
+      transform-origin: 641px 589px;
+      animation: sealStamp 0.4s 3.4s ease forwards;
+    }
+
+    #slogan {
+      opacity: 0;
+      animation: textSlideUp 0.5s 3.8s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes inkReveal {
+      0% { stroke-dashoffset: 2000; fill-opacity: 0; }
+      30% { stroke-dashoffset: 1400; fill-opacity: 0.3; }
+      60% { stroke-dashoffset: 600; fill-opacity: 0.7; }
+      100% { stroke-dashoffset: 0; fill-opacity: 1; }
+    }
+
+    @keyframes glowAppear {
+      from { opacity: 0; transform: scale(0.3); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    @keyframes dotPulse {
+      0%, 100% { opacity: 1; r: 5; }
+      50% { opacity: 0.7; r: 7; }
+    }
+
+    @keyframes textSlideUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes sealStamp {
+      0% { opacity: 0; transform: scale(2) rotate(-10deg); }
+      60% { opacity: 1; transform: scale(0.95) rotate(1deg); }
+      80% { transform: scale(1.02) rotate(-0.5deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-wrapper">
+      <svg class="logo-svg" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#F0BA42" stop-opacity="1"/>
+            <stop offset="100%" stop-color="#F0BA42" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <rect id="bg" width="1024" height="1024" fill="#F8F8F6"/>
+
+        <path id="inkStroke"
+              d="M140 290
+                 C240 240,380 245,500 285
+                 C620 325,740 305,865 235
+                 C760 325,620 370,470 340
+                 C330 312,220 305,140 290 Z"
+              fill="#1E1E1E"
+              stroke="#1E1E1E"
+              stroke-width="2"/>
+
+        <circle id="glowCircle" cx="512" cy="286" r="52" fill="url(#glow)"/>
+        <circle id="glowDot" cx="512" cy="286" r="5" fill="#F0BA42"/>
+
+        <text id="englishText"
+              x="512" y="500"
+              text-anchor="middle"
+              font-family="Poppins,Arial,sans-serif"
+              font-size="92"
+              fill="#1E1E1E"
+              letter-spacing="4">TongXiao</text>
+
+        <text id="chineseText"
+              x="512" y="615"
+              text-anchor="middle"
+              font-family="KaiTi, STKaiti, serif"
+              font-size="86"
+              fill="#1E1E1E">通霄</text>
+
+        <g id="sealGroup">
+          <rect x="620" y="560" width="42" height="58" rx="4" fill="#C62828"/>
+          <text x="641" y="600"
+                text-anchor="middle"
+                font-family="KaiTi, serif"
+                font-size="22"
+                fill="white">印</text>
+        </g>
+
+        <text id="slogan"
+              x="512" y="690"
+              text-anchor="middle"
+              font-family="Microsoft YaHei, Arial, sans-serif"
+              font-size="28"
+              letter-spacing="4"
+              fill="#444444">背至通宵 · 终将通晓</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

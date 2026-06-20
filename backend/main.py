@@ -385,6 +385,510 @@ def _extract_cards_from_lines(lines):
     return cards
 
 
+def _compute_hash(front: str, subject_id: int) -> str:
+    import hashlib
+    raw = f"{front.strip().lower()}|{subject_id}"
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:64]
+
+
+# --- Knowledge Base API Routes ---
+
+class KnowledgeImportBody(BaseModel):
+    subject: str
+    tags: list = []
+    items: list
+
+
+@app.get("/api/knowledge")
+def api_knowledge(
+    subject: str = "english",
+    search: str = "",
+    tag: str = "",
+    page: int = 1,
+    page_size: int = 50,
+    user_id: int = Depends(get_current_user_id),
+):
+    p = _placeholder()
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(f"SELECT id FROM subjects WHERE name={p}", (subject,))
+    subj = cur.fetchone()
+    if not subj:
+        raise HTTPException(400, "Subject not found")
+    sid = subj["id"]
+
+    conditions = [f"subject_id={p}"]
+    params = [sid]
+
+    if search:
+        conditions.append(f"(front LIKE {p} OR back LIKE {p})")
+        params.extend([f"%{search}%", f"%{search}%"])
+
+    if tag:
+        conditions.append(f"tags LIKE {p}")
+        params.append(f'%"{tag}"%')
+
+    where = " AND ".join(conditions)
+
+    cur.execute(f"SELECT COUNT(*) as cnt FROM knowledge_items WHERE {where}", tuple(params))
+    total = cur.fetchone()["cnt"]
+
+    offset = (page - 1) * page_size
+    cur.execute(
+        f"SELECT * FROM knowledge_items WHERE {where} ORDER BY id LIMIT {p} OFFSET {p}",
+        tuple(params) + (page_size, offset),
+    )
+    items = [dict(r) for r in cur.fetchall()]
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size,
+    }
+
+
+@app.get("/api/knowledge/tags")
+def api_knowledge_tags(subject: str = "english", user_id: int = Depends(get_current_user_id)):
+    p = _placeholder()
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(f"SELECT id FROM subjects WHERE name={p}", (subject,))
+    subj = cur.fetchone()
+    if not subj:
+        raise HTTPException(400, "Subject not found")
+    sid = subj["id"]
+
+    cur.execute(f"SELECT tags FROM knowledge_items WHERE subject_id={p}", (sid,))
+    rows = cur.fetchall()
+
+    tag_counts = {}
+    for row in rows:
+        import json
+        try:
+            tags = json.loads(row["tags"]) if row["tags"] else []
+            for t in tags:
+                tag_counts[t] = tag_counts.get(t, 0) + 1
+        except:
+            pass
+
+    return [{"name": k, "count": v} for k, v in sorted(tag_counts.items())]
+
+
+@app.post("/api/knowledge/import")
+def api_knowledge_import(body: KnowledgeImportBody, user_id: int = Depends(get_current_user_id)):
+    if not body.items:
+        raise HTTPException(400, "No items provided")
+
+    p = _placeholder()
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(f"SELECT id FROM subjects WHERE name={p}", (body.subject,))
+    subj = cur.fetchone()
+    if not subj:
+        raise HTTPException(400, "Subject not found")
+    sid = subj["id"]
+
+    import json
+    tags_json = json.dumps(body.tags, ensure_ascii=False) if body.tags else "[]"
+
+    new_count = 0
+    skip_count = 0
+
+    for item in body.items:
+        front = item.get("front", item.get("word", ""))
+        back = item.get("back", item.get("definition", ""))
+        if not front or not back:
+            skip_count += 1
+            continue
+
+        h = _compute_hash(front, sid)
+
+        if DB_TYPE == "mysql":
+            sql = (
+                f"INSERT IGNORE INTO knowledge_items "
+                f"(subject_id, front, back, tags, hash, source, created_by) "
+                f"VALUES ({p}, {p}, {p}, {p}, {p}, 'import', {p})"
+            )
+        else:
+            sql = (
+                f"INSERT OR IGNORE INTO knowledge_items "
+                f"(subject_id, front, back, tags, hash, source, created_by) "
+                f"VALUES ({p}, {p}, {p}, {p}, {p}, 'import', {p})"
+            )
+
+        cur.execute(sql, (sid, front, back, tags_json, h, user_id))
+
+        if cur.rowcount > 0:
+            new_count += 1
+        else:
+            skip_count += 1
+
+    if DB_TYPE == "mysql":
+        conn.commit()
+
+    return {"ok": True, "new": new_count, "duplicate": skip_count}
+
+
+@app.post("/api/knowledge/import/file")
+async def api_knowledge_import_file(
+    file: UploadFile = File(...),
+    subject: str = Form("english"),
+    tags: str = Form(""),
+    user_id: int = Depends(get_current_user_id),
+):
+    filename = file.filename
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+
+    content = await file.read()
+    items = []
+
+    if ext == "csv":
+        text = content.decode("utf-8", errors="replace")
+        lines = text.split("\n")
+        for line in lines[1:]:
+            line = line.strip()
+            if not line:
+                continue
+            parts = _parse_csv_line(line)
+            if len(parts) >= 2 and parts[0] and parts[1]:
+                items.append({"front": parts[0], "back": parts[1]})
+
+    elif ext == "json":
+        import json as json_mod
+        text = content.decode("utf-8", errors="replace")
+        parsed = json_mod.loads(text)
+        if isinstance(parsed, list):
+            for r in parsed:
+                f = r.get("front") or r.get("word") or ""
+                b = r.get("back") or r.get("definition") or r.get("meaning") or ""
+                if f and b:
+                    items.append({"front": f, "back": b})
+
+    elif ext == "txt":
+        text = content.decode("utf-8", errors="replace")
+        for line in text.split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split("|") if "|" in line else line.split("\t")
+            if len(parts) >= 2 and parts[0].strip() and parts[1].strip():
+                items.append({"front": parts[0].strip(), "back": parts[1].strip()})
+
+    elif ext == "docx":
+        try:
+            import docx
+            import io
+            doc = docx.Document(io.BytesIO(content))
+            paragraphs = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
+            items = _extract_cards_from_lines(paragraphs)
+        except ImportError:
+            raise HTTPException(400, "服务器未安装 python-docx，无法解析 Word 文件")
+        except Exception as e:
+            raise HTTPException(400, f"Word 文件解析失败: {e}")
+
+    elif ext == "pdf":
+        try:
+            import pdfplumber
+            import io
+            text_parts = []
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                for page in pdf.pages:
+                    t = page.extract_text()
+                    if t:
+                        text_parts.append(t)
+            full_text = "\n".join(text_parts)
+            lines = [l.strip() for l in full_text.split("\n") if l.strip()]
+            items = _extract_cards_from_lines(lines)
+        except ImportError:
+            raise HTTPException(400, "服务器未安装 pdfplumber，无法解析 PDF 文件")
+        except Exception as e:
+            raise HTTPException(400, f"PDF 文件解析失败: {e}")
+
+    else:
+        raise HTTPException(400, f"不支持的文件格式: .{ext}")
+
+    if not items:
+        raise HTTPException(400, "未能从文件中提取到有效的词条数据")
+
+    import json as json_mod
+    tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
+
+    p = _placeholder()
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(f"SELECT id FROM subjects WHERE name={p}", (subject,))
+    subj = cur.fetchone()
+    if not subj:
+        raise HTTPException(400, "Subject not found")
+    sid = subj["id"]
+
+    tags_json = json_mod.dumps(tag_list, ensure_ascii=False) if tag_list else "[]"
+
+    new_count = 0
+    skip_count = 0
+
+    for item in items:
+        h = _compute_hash(item["front"], sid)
+
+        if DB_TYPE == "mysql":
+            sql = (
+                f"INSERT IGNORE INTO knowledge_items "
+                f"(subject_id, front, back, tags, hash, source, created_by) "
+                f"VALUES ({p}, {p}, {p}, {p}, {p}, 'import', {p})"
+            )
+        else:
+            sql = (
+                f"INSERT OR IGNORE INTO knowledge_items "
+                f"(subject_id, front, back, tags, hash, source, created_by) "
+                f"VALUES ({p}, {p}, {p}, {p}, {p}, 'import', {p})"
+            )
+
+        cur.execute(sql, (sid, item["front"], item["back"], tags_json, h, user_id))
+
+        if cur.rowcount > 0:
+            new_count += 1
+        else:
+            skip_count += 1
+
+    if DB_TYPE == "mysql":
+        conn.commit()
+
+    return {"ok": True, "new": new_count, "duplicate": skip_count, "filename": filename}
+
+
+# --- Wordbook API Routes ---
+
+class WordbookCreateBody(BaseModel):
+    name: str
+    description: str = ""
+    subject: str
+    item_ids: list = []
+
+
+@app.get("/api/wordbooks")
+def api_wordbooks(user_id: int = Depends(get_current_user_id)):
+    p = _placeholder()
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(
+        f"SELECT w.*, s.display_name as subject_name FROM wordbooks w "
+        f"JOIN subjects s ON w.subject_id = s.id "
+        f"WHERE w.user_id={p} ORDER BY w.updated_at DESC",
+        (user_id,),
+    )
+    return [dict(r) for r in cur.fetchall()]
+
+
+@app.post("/api/wordbooks")
+def api_wordbook_create(body: WordbookCreateBody, user_id: int = Depends(get_current_user_id)):
+    p = _placeholder()
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(f"SELECT id FROM subjects WHERE name={p}", (body.subject,))
+    subj = cur.fetchone()
+    if not subj:
+        raise HTTPException(400, "Subject not found")
+    sid = subj["id"]
+
+    cur.execute(
+        f"INSERT INTO wordbooks (user_id, name, description, subject_id) VALUES ({p},{p},{p},{p})",
+        (user_id, body.name, body.description, sid),
+    )
+    if DB_TYPE == "mysql":
+        conn.commit()
+    wb_id = cur.lastrowid
+
+    added = 0
+    if body.item_ids:
+        for idx, kid in enumerate(body.item_ids):
+            try:
+                cur.execute(
+                    f"INSERT INTO wordbook_items (wordbook_id, knowledge_id, order_num) VALUES ({p},{p},{p})",
+                    (wb_id, kid, idx + 1),
+                )
+                added += 1
+            except:
+                pass
+        cur.execute(f"UPDATE wordbooks SET item_count={p} WHERE id={p}", (added, wb_id))
+        if DB_TYPE == "mysql":
+            conn.commit()
+
+    return {"ok": True, "id": wb_id, "item_count": added}
+
+
+@app.get("/api/wordbooks/{wordbook_id}")
+def api_wordbook_detail(wordbook_id: int, user_id: int = Depends(get_current_user_id)):
+    p = _placeholder()
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(
+        f"SELECT w.*, s.display_name as subject_name, s.name as subject_key FROM wordbooks w "
+        f"JOIN subjects s ON w.subject_id = s.id "
+        f"WHERE w.id={p} AND w.user_id={p}",
+        (wordbook_id, user_id),
+    )
+    wb = cur.fetchone()
+    if not wb:
+        raise HTTPException(404, "词书不存在")
+
+    cur.execute(
+        f"SELECT wi.id as item_id, wi.order_num, k.* FROM wordbook_items wi "
+        f"JOIN knowledge_items k ON wi.knowledge_id = k.id "
+        f"WHERE wi.wordbook_id={p} ORDER BY wi.order_num",
+        (wordbook_id,),
+    )
+    items = [dict(r) for r in cur.fetchall()]
+
+    result = dict(wb)
+    result["items"] = items
+    return result
+
+
+@app.post("/api/wordbooks/{wordbook_id}/items")
+def api_wordbook_add_items(wordbook_id: int, body: dict, user_id: int = Depends(get_current_user_id)):
+    p = _placeholder()
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(f"SELECT id FROM wordbooks WHERE id={p} AND user_id={p}", (wordbook_id, user_id))
+    if not cur.fetchone():
+        raise HTTPException(404, "词书不存在")
+
+    item_ids = body.get("item_ids", [])
+    if not item_ids:
+        raise HTTPException(400, "No item_ids provided")
+
+    cur.execute(f"SELECT MAX(order_num) as max_ord FROM wordbook_items WHERE wordbook_id={p}", (wordbook_id,))
+    max_ord = cur.fetchone()["max_ord"] or 0
+
+    added = 0
+    for idx, kid in enumerate(item_ids):
+        try:
+            cur.execute(
+                f"INSERT INTO wordbook_items (wordbook_id, knowledge_id, order_num) VALUES ({p},{p},{p})",
+                (wordbook_id, kid, max_ord + idx + 1),
+            )
+            added += 1
+        except:
+            pass
+
+    cur.execute(
+        f"UPDATE wordbooks SET item_count=(SELECT COUNT(*) FROM wordbook_items WHERE wordbook_id={p}) WHERE id={p}",
+        (wordbook_id, wordbook_id),
+    )
+    if DB_TYPE == "mysql":
+        conn.commit()
+
+    return {"ok": True, "added": added}
+
+
+@app.delete("/api/wordbooks/{wordbook_id}/items/{knowledge_id}")
+def api_wordbook_remove_item(wordbook_id: int, knowledge_id: int, user_id: int = Depends(get_current_user_id)):
+    p = _placeholder()
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(f"SELECT id FROM wordbooks WHERE id={p} AND user_id={p}", (wordbook_id, user_id))
+    if not cur.fetchone():
+        raise HTTPException(404, "词书不存在")
+
+    cur.execute(
+        f"DELETE FROM wordbook_items WHERE wordbook_id={p} AND knowledge_id={p}",
+        (wordbook_id, knowledge_id),
+    )
+
+    cur.execute(
+        f"UPDATE wordbooks SET item_count=(SELECT COUNT(*) FROM wordbook_items WHERE wordbook_id={p}) WHERE id={p}",
+        (wordbook_id, wordbook_id),
+    )
+    if DB_TYPE == "mysql":
+        conn.commit()
+
+    return {"ok": True}
+
+
+@app.delete("/api/wordbooks/{wordbook_id}")
+def api_wordbook_delete(wordbook_id: int, user_id: int = Depends(get_current_user_id)):
+    p = _placeholder()
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(f"SELECT id FROM wordbooks WHERE id={p} AND user_id={p}", (wordbook_id, user_id))
+    if not cur.fetchone():
+        raise HTTPException(404, "词书不存在")
+
+    cur.execute(f"DELETE FROM wordbooks WHERE id={p}", (wordbook_id,))
+    if DB_TYPE == "mysql":
+        conn.commit()
+
+    return {"ok": True}
+
+
+@app.post("/api/wordbooks/{wordbook_id}/to-topic")
+def api_wordbook_to_topic(wordbook_id: int, user_id: int = Depends(get_current_user_id)):
+    p = _placeholder()
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute(
+        f"SELECT w.*, s.name as subject_key FROM wordbooks w "
+        f"JOIN subjects s ON w.subject_id = s.id "
+        f"WHERE w.id={p} AND w.user_id={p}",
+        (wordbook_id, user_id),
+    )
+    wb = cur.fetchone()
+    if not wb:
+        raise HTTPException(404, "词书不存在")
+
+    cur.execute(
+        f"SELECT k.front, k.back FROM wordbook_items wi "
+        f"JOIN knowledge_items k ON wi.knowledge_id = k.id "
+        f"WHERE wi.wordbook_id={p} ORDER BY wi.order_num",
+        (wordbook_id,),
+    )
+    items = cur.fetchall()
+
+    if not items:
+        raise HTTPException(400, "词书为空，无法生成学习卡片")
+
+    sid = wb["subject_id"]
+    topic_name = wb["name"]
+
+    cur.execute(f"SELECT id FROM topics WHERE subject_id={p} AND name={p}", (sid, topic_name))
+    existing = cur.fetchone()
+    if existing:
+        tid = existing["id"]
+        cur.execute(f"DELETE FROM cards WHERE topic_id={p}", (tid,))
+    else:
+        cur.execute(f"SELECT MAX(order_num) FROM topics WHERE subject_id={p}", (sid,))
+        max_ord = cur.fetchone()["MAX(order_num)"] or 0
+        cur.execute(
+            f"INSERT INTO topics (subject_id, name, order_num, book_id) VALUES ({p},{p},{p}, NULL)",
+            (sid, topic_name, max_ord + 1),
+        )
+        tid = cur.lastrowid
+
+    for idx, item in enumerate(items):
+        cur.execute(
+            f"INSERT INTO cards (topic_id, front, back, order_num) VALUES ({p},{p},{p},{p})",
+            (tid, item["front"], item["back"], idx + 1),
+        )
+
+    if DB_TYPE == "mysql":
+        conn.commit()
+
+    return {"ok": True, "topic_id": tid, "topic_name": topic_name, "card_count": len(items)}
+
+
 # --- Serve Static Frontend (production build) ---
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "frontend", "dist")

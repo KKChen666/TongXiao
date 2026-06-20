@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#667eea"/>
+      <stop offset="100%" stop-color="#764ba2"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0f4ff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景圆 -->
+  <circle cx="100" cy="100" r="90" fill="url(#bgGrad)"/>
+
+  <!-- 底层卡片（静态） -->
+  <rect x="55" y="52" width="80" height="60" rx="8" fill="white" opacity="0.4" transform="rotate(-5, 95, 82)"/>
+
+  <!-- 中层卡片（静态） -->
+  <rect x="58" y="48" width="80" height="60" rx="8" fill="white" opacity="0.6" transform="rotate(2, 98, 78)"/>
+
+  <!-- 主卡片（翻转卡片） -->
+  <g id="mainCard">
+    <rect x="60" y="45" width="80" height="60" rx="8" fill="url(#cardGrad)" stroke="#e2e8f0" stroke-width="1"/>
+    <!-- 卡片上的单词线条 -->
+    <line x1="72" y1="62" x2="120" y2="62" stroke="#667eea" stroke-width="2" stroke-linecap="round"/>
+    <line x1="72" y1="72" x2="108" y2="72" stroke="#c7d2fe" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="72" y1="82" x2="96" y2="82" stroke="#c7d2fe" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- 翻转标记 -->
+    <circle cx="130" cy="95" r="8" fill="#667eea" opacity="0.8"/>
+    <path d="M127 95 L130 92 L133 95 M130 92 L130 98" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- 脑/记忆图标 -->
+  <g transform="translate(100, 140)">
+    <!-- 灯泡底座 -->
+    <rect x="-3" y="5" width="6" height="4" rx="1" fill="white" opacity="0.9"/>
+    <rect x="-4" y="10" width="8" height="2" rx="1" fill="white" opacity="0.9"/>
+    <!-- 灯泡 -->
+    <path d="M0 -12 C-7 -12 -10 -6 -10 0 C-10 4 -7 7 -5 9 L5 9 C7 7 10 4 10 0 C10 -6 7 -12 0 -12 Z" fill="white" opacity="0.9"/>
+    <!-- 灯丝 -->
+    <path d="M-3 -2 Q0 -6 3 -2" stroke="#667eea" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <line x1="-2" y1="4" x2="2" y2="4" stroke="#667eea" stroke-width="1" stroke-linecap="round"/>
+  </g>
+</svg>
