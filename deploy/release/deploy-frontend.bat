@@ -27,6 +27,18 @@ set "SERVER_PATH=/root/tongxiao"
 set "PEM_FILE=%~dp0TencentSSHKey.pem"
 set "SSH_OPTS=-o StrictHostKeyChecking=no -o ConnectTimeout=10 -o BatchMode=yes"
 
+REM Resolve real ssh.exe and scp.exe paths (avoid finding ssh.bat in same dir)
+for /f "tokens=*" %%i in ('where ssh.exe') do (
+    set "SSH_EXE=%%i"
+    goto :ssh_found
+)
+:ssh_found
+for /f "tokens=*" %%i in ('where scp.exe') do (
+    set "SCP_EXE=%%i"
+    goto :scp_found
+)
+:scp_found
+
 REM Local paths
 set "SCRIPT_DIR=%~dp0"
 set "PROJECT_ROOT=%SCRIPT_DIR%..\.."
@@ -167,7 +179,7 @@ echo [==] Server: %SERVER_USER%@%SERVER_IP%
 echo [==] Target: %SERVER_PATH%/frontend/dist/
 echo.
 
-scp %SSH_OPTS% -i "%PEM_FILE%" -r "%SCRIPT_DIR%dist\*" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/frontend/dist/
+"%SCP_EXE%" %SSH_OPTS% -i "%PEM_FILE%" -r "%SCRIPT_DIR%dist\*" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/frontend/dist/
 if errorlevel 1 (
     echo [ERROR] Upload failed
     goto :error
@@ -177,14 +189,14 @@ echo [OK] Frontend files uploaded
 REM Upload docker-compose.yml (needed for container config)
 if exist "%DEPLOY_DIR%\docker-compose.yml" (
     echo [==] Uploading docker-compose.yml...
-    scp %SSH_OPTS% -i "%PEM_FILE%" "%DEPLOY_DIR%\docker-compose.yml" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/docker-compose.yml
+    "%SCP_EXE%" %SSH_OPTS% -i "%PEM_FILE%" "%DEPLOY_DIR%\docker-compose.yml" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/docker-compose.yml
     if not errorlevel 1 echo [OK] docker-compose.yml uploaded
 )
 
 REM Upload nginx.conf
 if exist "%DEPLOY_DIR%\nginx.conf" (
     echo [==] Uploading nginx.conf...
-    scp %SSH_OPTS% -i "%PEM_FILE%" "%DEPLOY_DIR%\nginx.conf" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/nginx.conf
+    "%SCP_EXE%" %SSH_OPTS% -i "%PEM_FILE%" "%DEPLOY_DIR%\nginx.conf" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/nginx.conf
     if not errorlevel 1 echo [OK] nginx.conf uploaded
 )
 echo.
@@ -194,7 +206,7 @@ if "%1"=="upload" goto :success
 :restart
 REM === RESTART ===
 echo [3/3] Restarting frontend container...
-ssh %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "docker restart tongxiao-frontend && exit"
+"%SSH_EXE%" %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "docker restart tongxiao-frontend && exit"
 if errorlevel 1 (
     echo [ERROR] Container restart failed
     goto :error
@@ -202,11 +214,11 @@ if errorlevel 1 (
 echo [OK] Container restarted
 
 echo [==] Checking service status...
-ssh %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "docker ps --filter \"name=tongxiao-frontend\" --format \"table {{.Names}}\t{{.Status}}\t{{.Ports}}\" && exit"
+"%SSH_EXE%" %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "docker ps --filter \"name=tongxiao-frontend\" --format \"table {{.Names}}\t{{.Status}}\t{{.Ports}}\" && exit"
 echo.
 
 echo [==] Testing frontend...
-ssh %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "curl -s -o /dev/null -w 'HTTP %%{http_code}' http://localhost:5465 && exit"
+"%SSH_EXE%" %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "curl -s -o /dev/null -w 'HTTP %%{http_code}' http://localhost:5465 && exit"
 echo.
 goto :success
 
