@@ -2,8 +2,7 @@ const SERVER_ORIGIN = 'https://good-luck-lct.icu';
 
 // Detect Capacitor native environment
 const isNativeApp = typeof window !== 'undefined'
-  && (window.location.protocol === 'capacitor:'
-    || window.location.hostname === 'localhost');
+  && window.location.protocol === 'capacitor:';
 
 const API_BASE = isNativeApp ? SERVER_ORIGIN + '/api' : '/api';
 

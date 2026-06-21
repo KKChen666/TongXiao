@@ -19,6 +19,8 @@ from config import DB_TYPE
 from auth import (
     hash_password, verify_password, create_token, get_current_user_id,
 )
+from ai.router import router as ai_router
+from ai.admin import router as admin_router
 
 
 @asynccontextmanager
@@ -29,6 +31,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="考研背诵 API", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.include_router(ai_router)
+app.include_router(admin_router)
 
 
 class RegisterBody(BaseModel):

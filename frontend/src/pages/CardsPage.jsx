@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button, ProgressBar, Spinner, Chip } from '@heroui/react';
-import { ChevronLeftIcon, CheckIcon, XMarkIcon, TrophyIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, CheckIcon, XMarkIcon, TrophyIcon, ArrowUturnLeftIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import api from '../api';
 import FlashCard from '../components/FlashCard';
+import AiChatPanel from '../components/AiChatPanel';
 
 function CardsPage({ topic, onBack, ebbinghaus, reviewMode }) {
   const [cards, setCards] = useState([]);
@@ -12,6 +13,7 @@ function CardsPage({ topic, onBack, ebbinghaus, reviewMode }) {
   const [results, setResults] = useState([]);
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [aiOpen, setAiOpen] = useState(false);
   const completionRef = useRef(null);
 
   useEffect(() => {
@@ -127,9 +129,10 @@ function CardsPage({ topic, onBack, ebbinghaus, reviewMode }) {
   }
 
   const isEnglish = topic?.subject_id === 1;
+  const cardContext = currentCard ? `${currentCard.front}${currentCard.back ? ' - ' + currentCard.back : ''}` : '';
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+    <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 relative">
       <TopBar topic={topic} onBack={onBack} index={index} total={cards.length} />
       <div className="flex-1 flex flex-col px-4 md:px-8 pb-2 md:pb-4 overflow-hidden">
         {/* Progress dots */}
@@ -185,6 +188,22 @@ function CardsPage({ topic, onBack, ebbinghaus, reviewMode }) {
           </Button>
         </div>
       </div>
+
+      {/* 悬浮 AI 按钮 */}
+      <button
+        onClick={() => setAiOpen(true)}
+        className="absolute bottom-28 right-5 md:bottom-8 md:right-8 w-14 h-14 bg-primary rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-transform z-10"
+      >
+        <SparklesIcon className="w-6 h-6 text-white" />
+      </button>
+
+      {/* AI 对话面板 */}
+      <AiChatPanel
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        context={cardContext}
+        subject={isEnglish ? 'english' : 'polit'}
+      />
     </div>
   );
 }
