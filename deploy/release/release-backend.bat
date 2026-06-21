@@ -24,6 +24,18 @@ set "SERVER_PATH=/root/tongxiao"
 set "PEM_FILE=%~dp0TencentSSHKey.pem"
 set "SSH_OPTS=-o StrictHostKeyChecking=no -o ConnectTimeout=10 -o BatchMode=yes"
 
+REM Resolve real ssh.exe and scp.exe paths (avoid finding ssh.bat in same dir)
+for /f "tokens=*" %%i in ('where ssh.exe') do (
+    set "SSH_EXE=%%i"
+    goto :ssh_found
+)
+:ssh_found
+for /f "tokens=*" %%i in ('where scp.exe') do (
+    set "SCP_EXE=%%i"
+    goto :scp_found
+)
+:scp_found
+
 REM Local paths
 set "SCRIPT_DIR=%~dp0"
 set "PROJECT_ROOT=%SCRIPT_DIR%..\.."
@@ -105,7 +117,7 @@ echo [==] Target path: %SERVER_PATH%/backend/
 echo.
 
 REM Upload backend directory
-scp %SSH_OPTS% -i "%PEM_FILE%" -r "%BACKEND_DIR%\*" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/backend/
+"%SCP_EXE%" %SSH_OPTS% -i "%PEM_FILE%" -r "%BACKEND_DIR%\*" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/backend/
 if errorlevel 1 (
     echo [ERROR] Upload failed, please check network connection and server configuration
     goto :error
@@ -118,7 +130,7 @@ echo [3/4] Uploading docker configuration...
 REM Upload docker-compose.yml (if exists)
 if exist "%DEPLOY_DIR%\docker-compose.yml" (
     echo [==] Uploading docker-compose.yml...
-    scp %SSH_OPTS% -i "%PEM_FILE%" "%DEPLOY_DIR%\docker-compose.yml" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/docker-compose.yml
+    "%SCP_EXE%" %SSH_OPTS% -i "%PEM_FILE%" "%DEPLOY_DIR%\docker-compose.yml" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/docker-compose.yml
     if errorlevel 1 (
         echo [WARNING] docker-compose.yml upload failed, but continue
     ) else (
@@ -130,7 +142,7 @@ if exist "%DEPLOY_DIR%\docker-compose.yml" (
 REM Upload Dockerfile (if exists)
 if exist "%DEPLOY_DIR%\Dockerfile" (
     echo [==] Uploading Dockerfile...
-    scp %SSH_OPTS% -i "%PEM_FILE%" "%DEPLOY_DIR%\Dockerfile" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/Dockerfile
+    "%SCP_EXE%" %SSH_OPTS% -i "%PEM_FILE%" "%DEPLOY_DIR%\Dockerfile" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/Dockerfile
     if errorlevel 1 (
         echo [WARNING] Dockerfile upload failed, but continue
     ) else (
@@ -142,7 +154,7 @@ if exist "%DEPLOY_DIR%\Dockerfile" (
 REM Upload requirements.txt (if exists)
 if exist "%BACKEND_DIR%\requirements.txt" (
     echo [==] Uploading requirements.txt...
-    scp %SSH_OPTS% -i "%PEM_FILE%" "%BACKEND_DIR%\requirements.txt" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/backend/requirements.txt
+    "%SCP_EXE%" %SSH_OPTS% -i "%PEM_FILE%" "%BACKEND_DIR%\requirements.txt" %SERVER_USER%@%SERVER_IP%:%SERVER_PATH%/backend/requirements.txt
     if errorlevel 1 (
         echo [WARNING] requirements.txt upload failed, but continue
     ) else (
@@ -160,7 +172,7 @@ echo [==] Connecting to server...
 
 REM Restart backend container
 echo [==] Restarting backend container...
-ssh %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "cd %SERVER_PATH% && docker-compose restart tongxiao-backend && exit"
+"%SSH_EXE%" %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "cd %SERVER_PATH% && docker-compose restart tongxiao-backend && exit"
 if errorlevel 1 (
     echo [ERROR] Backend container restart failed
     goto :error
@@ -170,17 +182,17 @@ echo.
 
 REM Verify backend service status
 echo [==] Verifying backend service status...
-ssh %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "docker ps --filter \"name=tongxiao-backend\" --format \"table {{.Names}}\t{{.Status}}\t{{.Ports}}\" && exit"
+"%SSH_EXE%" %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "docker ps --filter \"name=tongxiao-backend\" --format \"table {{.Names}}\t{{.Status}}\t{{.Ports}}\" && exit"
 echo.
 
 REM Test backend access
 echo [==] Testing backend access...
-ssh %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "curl -s -o /dev/null -w 'HTTP %%{http_code}' http://localhost:7896/api/health && exit"
+"%SSH_EXE%" %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "curl -s -o /dev/null -w 'HTTP %%{http_code}' http://localhost:7896/api/health && exit"
 echo.
 
 REM Show backend logs
 echo [==] Recent backend logs:
-ssh %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "docker logs tongxiao-backend --tail 10 && exit"
+"%SSH_EXE%" %SSH_OPTS% -i "%PEM_FILE%" %SERVER_USER%@%SERVER_IP% "docker logs tongxiao-backend --tail 10 && exit"
 echo.
 
 :success
