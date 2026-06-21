@@ -10,6 +10,7 @@ import ReviewPage from './pages/ReviewPage';
 import ImportPage from './pages/ImportPage';
 import WordbookPage from './pages/WordbookPage';
 import ProfilePage from './pages/ProfilePage';
+import AiPage from './pages/AiPage';
 import LoginPage from './pages/LoginPage';
 import SplashPage from './pages/SplashPage';
 import { useEbbinghaus } from './hooks/useEbbinghaus';
@@ -123,6 +124,8 @@ function App() {
         return <WordbookPage onBack={() => switchTab('learn')} />;
       case 'import':
         return <ImportPage onImportSuccess={() => {}} />;
+      case 'ai':
+        return <AiPage />;
       case 'profile':
         return <ProfilePage ebbinghaus={ebbinghaus} user={user} onLogout={handleLogout} />;
       default:
