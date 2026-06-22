@@ -1,11 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Button, Input } from '@heroui/react';
 import { PaperAirplaneIcon, XMarkIcon, SparklesIcon, BookOpenIcon } from '@heroicons/react/24/outline';
-
-const SERVER_ORIGIN = 'https://good-luck-lct.icu';
-const isNativeApp = typeof window !== 'undefined'
-  && window.location.protocol === 'capacitor:';
-const API_BASE = isNativeApp ? SERVER_ORIGIN + '/api' : '/api';
+import { useAiChat } from '../hooks/useAiChat';
+import { markdownToSafeHtml } from '../utils/sanitize';
 
 const S = {
   bg: 'bg-white dark:bg-gray-900',
@@ -21,12 +17,12 @@ const S = {
 };
 
 function AiChatPanel({ open, onClose, context, subject = 'english' }) {
-  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const autoSentRef = useRef(false);
+
+  const { messages, loading, sendMessage } = useAiChat({ subject, context });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -38,117 +34,29 @@ function AiChatPanel({ open, onClose, context, subject = 'english' }) {
     }
   }, [open]);
 
+  // Auto-send message when panel opens with context
   useEffect(() => {
-    if (open && context && messages.length === 0) {
+    if (open && context && messages.length === 0 && !autoSentRef.current) {
+      autoSentRef.current = true;
       const autoMsg = `请帮我讲解一下这个知识点：${context}`;
       sendMessage(autoMsg);
     }
-  }, [open, context]);
-
-  const sendMessage = async (textOverride) => {
-    const text = (textOverride || input).trim();
-    if (!text || loading) return;
-
-    if (!textOverride) setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: text }]);
-    setLoading(true);
-
-    try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      };
-
-      const res = await fetch(API_BASE + '/ai/chat/stream', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          message: text,
-          session_id: sessionId,
-          subject,
-          context: context || '',
-        }),
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      setMessages(prev => [...prev, { role: 'assistant', content: '', suggestions: [], ragSources: [] }]);
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let fullContent = '';
-      let suggestions = [];
-      let ragSources = [];
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (data.type === 'token') {
-              fullContent += data.content;
-              setMessages(prev => {
-                const updated = [...prev];
-                updated[updated.length - 1] = { ...updated[updated.length - 1], content: fullContent };
-                return updated;
-              });
-              if (data.session_id) setSessionId(data.session_id);
-            } else if (data.type === 'done') {
-              suggestions = data.suggestions || [];
-              ragSources = data.rag_sources || [];
-              if (data.content) fullContent = data.content;
-              setMessages(prev => {
-                const updated = [...prev];
-                updated[updated.length - 1] = {
-                  ...updated[updated.length - 1],
-                  content: fullContent,
-                  suggestions,
-                  ragSources,
-                  tokenUsage: data.token_usage,
-                };
-                return updated;
-              });
-            } else if (data.type === 'error') {
-              setMessages(prev => {
-                const updated = [...prev];
-                updated[updated.length - 1] = {
-                  ...updated[updated.length - 1],
-                  content: `错误：${data.content}`,
-                  suggestions: [],
-                  ragSources: [],
-                };
-                return updated;
-              });
-            }
-          } catch {}
-        }
-      }
-    } catch (err) {
-      setMessages(prev => {
-        const updated = [...prev];
-        if (updated.length > 0 && updated[updated.length - 1].role === 'assistant' && !updated[updated.length - 1].content) {
-          updated[updated.length - 1] = { ...updated[updated.length - 1], content: `连接失败：${err.message}` };
-        }
-        return updated;
-      });
-    } finally {
-      setLoading(false);
+    // Reset flag when panel closes
+    if (!open) {
+      autoSentRef.current = false;
     }
+  }, [open, context, messages.length, sendMessage]);
+
+  const handleSend = () => {
+    if (!input.trim() || loading) return;
+    sendMessage(input);
+    setInput('');
   };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSend();
     }
   };
 
@@ -157,15 +65,14 @@ function AiChatPanel({ open, onClose, context, subject = 'english' }) {
     return text.split('\n').map((line, i) => {
       if (line.startsWith('### ')) return <h3 key={i} className="text-sm font-bold mt-2 mb-1">{line.slice(4)}</h3>;
       if (line.startsWith('## ')) return <h2 key={i} className="text-sm font-bold mt-2 mb-1">{line.slice(3)}</h2>;
-      let processed = line;
-      processed = processed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      processed = processed.replace(/\*(.+?)\*/g, '<em>$1</em>');
-      processed = processed.replace(/`(.+?)`/g, `<code class="${S.code}">$1</code>`);
+
+      const processed = markdownToSafeHtml(line);
+
       if (line.startsWith('- ') || line.startsWith('* ')) {
-        return <li key={i} className="ml-3 list-disc text-xs" dangerouslySetInnerHTML={{ __html: processed.slice(2) }} />;
+        return <li key={i} className="ml-3 list-disc text-xs" dangerouslySetInnerHTML={{ __html: markdownToSafeHtml(line.slice(2)) }} />;
       }
       if (/^\d+\.\s/.test(line)) {
-        return <li key={i} className="ml-3 list-decimal text-xs" dangerouslySetInnerHTML={{ __html: processed.replace(/^\d+\.\s/, '') }} />;
+        return <li key={i} className="ml-3 list-decimal text-xs" dangerouslySetInnerHTML={{ __html: markdownToSafeHtml(line.replace(/^\d+\.\s/, '')) }} />;
       }
       if (line.trim() === '') return <br key={i} />;
       return <p key={i} className="text-xs" dangerouslySetInnerHTML={{ __html: processed }} />;
@@ -190,9 +97,9 @@ function AiChatPanel({ open, onClose, context, subject = 'english' }) {
               </span>
             )}
           </div>
-          <Button isIconOnly size="sm" variant="ghost" onPress={onClose}>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <XMarkIcon className="w-4 h-4 text-gray-500" />
-          </Button>
+          </button>
         </div>
 
         {/* 消息 */}
@@ -262,26 +169,23 @@ function AiChatPanel({ open, onClose, context, subject = 'english' }) {
         {/* 输入 */}
         <div className={`flex-shrink-0 border-t ${S.border} px-3 py-2 pb-[max(8px,env(safe-area-inset-bottom,0px))]`}>
           <div className="flex gap-2 items-end">
-            <Input
+            <input
               ref={inputRef}
+              type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="继续提问..."
-              isDisabled={loading}
-              size="sm"
-              classNames={{ input: "text-xs", inputWrapper: `${S.bgAlt} rounded-xl min-h-[38px]` }}
+              disabled={loading}
+              className={`flex-1 text-xs ${S.bgAlt} rounded-xl min-h-[38px] px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500/20 transition-shadow`}
             />
-            <Button
-              isIconOnly
-              color="primary"
-              size="sm"
-              isDisabled={!input.trim() || loading}
-              onPress={() => sendMessage()}
-              className="rounded-xl flex-shrink-0"
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || loading}
+              className="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
             >
               <PaperAirplaneIcon className="w-4 h-4" />
-            </Button>
+            </button>
           </div>
         </div>
       </div>

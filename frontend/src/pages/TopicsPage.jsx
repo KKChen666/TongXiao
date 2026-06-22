@@ -11,14 +11,40 @@ function TopicsPage({ subject, onBack, onSelectTopic, ebbinghaus }) {
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
   const listRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   useEffect(() => {
     if (!subject) return;
+
+    // Abort previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setLoading(true);
-    api(`/subjects/${subject.id}/topics`)
-      .then(setTopics)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    api(`/subjects/${subject.id}/topics`, { signal: controller.signal })
+      .then(data => {
+        if (!controller.signal.aborted) {
+          setTopics(data);
+        }
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          console.error('Failed to load topics:', err);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      controller.abort();
+    };
   }, [subject]);
 
   useGSAP(() => {

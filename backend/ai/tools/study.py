@@ -16,7 +16,7 @@ from .base import Tool
 
 class StudyAssistantTool(Tool):
     name = "study_assistant"
-    description = "学习助手工具。根据用户的学习进度和薄弱环节，提供个性化学习建议。返回用户的学习数据摘要。"
+    description = "学习助手工具。当用户询问学习建议、薄弱环节、需要复习什么、今天学了多少时使用。返回学习数据摘要和个性化建议。"
     parameters = {
         "user_id": "用户ID",
         "subject": "科目名称（可选）",

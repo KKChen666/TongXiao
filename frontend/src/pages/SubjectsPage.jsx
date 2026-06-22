@@ -9,9 +9,37 @@ function SubjectsPage({ onSelectSubject, ebbinghaus }) {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const gridRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   useEffect(() => {
-    api('/subjects').then(setSubjects).catch(console.error).finally(() => setLoading(false));
+    // Abort previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    api('/subjects', { signal: controller.signal })
+      .then(data => {
+        if (!controller.signal.aborted) {
+          setSubjects(data);
+        }
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          console.error('Failed to load subjects:', err);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   useGSAP(() => {

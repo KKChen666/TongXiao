@@ -85,7 +85,7 @@ export function useEbbinghaus() {
     return Object.keys(records).length;
   }, [records]);
 
-  const getReentionStats = useCallback(() => {
+  const getRetentionStats = useCallback(() => {
     const byLevel = {};
     const totalCards = Object.keys(records).length;
 
@@ -135,6 +135,6 @@ export function useEbbinghaus() {
     getCardStatus,
     getTotalReviewed,
     getStreak,
-    getReentionStats,
+    getRetentionStats,
   };
 }
