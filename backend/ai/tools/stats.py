@@ -16,7 +16,7 @@ from .base import Tool
 
 class StudyStatsTool(Tool):
     name = "get_study_stats"
-    description = "获取用户的学习统计数据，包括各科目进度、复习次数、掌握率等。"
+    description = "获取用户的学习统计数据。当用户询问学习进度、背了多少词、复习情况、掌握率时使用此工具。"
     parameters = {
         "user_id": "用户ID",
     }

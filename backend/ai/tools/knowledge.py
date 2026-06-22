@@ -16,9 +16,9 @@ from .base import Tool
 
 class KnowledgeSearchTool(Tool):
     name = "knowledge_search"
-    description = "从知识库中搜索词条，返回精确的词汇释义、音标、例句等信息。用于回答用户关于单词/知识点的问题。"
+    description = "搜索知识库中的单词/词条释义。仅用于用户询问具体单词或知识点的含义、用法、例句时。不要用于查询学习进度或统计。"
     parameters = {
-        "query": "搜索关键词（单词或短语）",
+        "query": "要搜索的单词或短语（如：abandon, 定语从句）",
         "subject": "科目名称，如 'english' 或 'polit'",
         "limit": "返回结果数量，默认5",
     }

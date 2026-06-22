@@ -1,10 +1,16 @@
 import os
+from pathlib import Path
+
+# 加载 .env 文件（在 import 时自动加载）
+from dotenv import load_dotenv
+_env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(_env_path)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ===== 环境变量覆盖硬编码配置 =====
 # Docker 部署时通过 docker-compose.yml 的 environment 传入
-# 本地开发时直接修改下方默认值即可
+# 本地开发时直接修改 .env 文件即可
 
 DB_TYPE = os.environ.get("DB_TYPE", "mysql")
 

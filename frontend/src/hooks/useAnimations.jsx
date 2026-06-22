@@ -21,39 +21,5 @@ export function useStaggerEntrance(items, options = {}) {
   return containerRef;
 }
 
-export function useCountUp(value, options = {}) {
-  const ref = useRef(null);
-  const { duration = 1.5, ease = 'power2.out' } = options;
-
-  useGSAP(() => {
-    if (value == null) return;
-    const obj = { val: 0 };
-    gsap.to(obj, {
-      val: value,
-      duration,
-      ease,
-      onUpdate: () => {
-        if (ref.current) ref.current.textContent = Math.round(obj.val);
-      },
-    });
-  }, { dependencies: [value] });
-
-  return ref;
-}
-
-export function useSlideIn(options = {}) {
-  const ref = useRef(null);
-  const { y = 30, duration = 0.6, ease = 'power3.out', delay = 0 } = options;
-
-  useGSAP(() => {
-    gsap.from(ref.current, {
-      opacity: 0,
-      y,
-      duration,
-      ease,
-      delay,
-    });
-  }, { scope: undefined });
-
-  return ref;
-}
+// Removed useCountUp and useSlideIn as they are unused
+// ProfilePage uses its own AnimatedNumber component

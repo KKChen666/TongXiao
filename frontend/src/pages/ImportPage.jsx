@@ -207,12 +207,13 @@ function ImportPage({ onImportSuccess }) {
           </Chip>
         )}
 
-        <Button variant="primary" size="lg" className="w-full h-12 rounded-xl font-bold"
-          isDisabled={(!importData && !useFileUpload) || importing}
-          isPending={importing}
-          onPress={doImport}>
-          导入到知识库
-        </Button>
+        <button
+          onClick={doImport}
+          disabled={(!importData && !useFileUpload) || importing}
+          className="w-full h-12 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {importing ? '导入中...' : '导入到知识库'}
+        </button>
       </div>
     </div>
   );

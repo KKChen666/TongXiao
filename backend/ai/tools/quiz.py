@@ -16,7 +16,7 @@ from .base import Tool
 
 class QuizGenerateTool(Tool):
     name = "generate_quiz"
-    description = "根据知识库中的内容生成练习题。支持选择题、填空题、翻译题等题型。用于帮助用户巩固学习。"
+    description = "生成练习题。当用户要求出题、做练习、测试、背诵检测时使用此工具。"
     parameters = {
         "subject": "科目名称，如 'english'",
         "topic_name": "章节名称（可选，不填则随机选取）",

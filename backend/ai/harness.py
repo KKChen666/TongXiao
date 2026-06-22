@@ -70,7 +70,7 @@ class AgentHarness:
             return "暂无可用工具"
         lines = []
         for t in schemas:
-            lines.append(f"- {t['name']}: {t['description']}")
+            lines.append(f"- **{t['name']}**: {t['description']}")
             if t['parameters']:
                 params_desc = ", ".join(f"{k}({v})" for k, v in t['parameters'].items())
                 lines.append(f"  参数: {params_desc}")
@@ -109,7 +109,12 @@ class AgentHarness:
             "\n## 工具调用格式\n"
             '如果需要使用工具，请输出以下格式：\n'
             '{"tool":"工具名", "arguments":{"参数名":"参数值"}}\n'
-            "只输出一个 JSON 对象，不要输出多余内容。\n"
+            "只输出一个 JSON 对象，不要输出多余内容。\n\n"
+            "## 重要提醒\n"
+            "- 词汇查询（xxx是什么意思）→ 用 knowledge_search\n"
+            "- 学习进度（我学了多少）→ 用 get_study_stats 或 study_assistant\n"
+            "- 出题练习（帮我出题）→ 用 generate_quiz\n"
+            "- 其他问题 → 直接回答，不需要工具\n"
         )
         return system_msg
 

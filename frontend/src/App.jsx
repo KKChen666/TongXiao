@@ -48,16 +48,19 @@ function App() {
     if (token && saved) {
       try {
         setUser(JSON.parse(saved));
-      } catch {}
+      } catch {
+        // Clean up corrupted data
+        localStorage.removeItem('user');
+      }
     }
     setAuthChecked(true);
   }, []);
 
-  const handleLogin = (userData) => {
+  const handleLogin = useCallback((userData) => {
     setUser(userData);
-  };
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
@@ -65,7 +68,45 @@ function App() {
     setPageStack(['learn']);
     setCurrentSubject(null);
     setCurrentTopic(null);
-  };
+  }, []);
+
+  const pushPage = useCallback((page) => setPageStack(prev => [...prev, page]), []);
+  const popPage = useCallback(() => setPageStack(prev => (prev.length <= 1 ? prev : prev.slice(0, -1))), []);
+
+  const currentPage = pageStack[pageStack.length - 1];
+  const isFullScreen = currentPage === 'cards' || currentPage === 'reviewCards';
+
+  const showTopics = useCallback((subject) => {
+    setCurrentSubject(subject);
+    pushPage('topics');
+  }, [pushPage]);
+
+  const showCards = useCallback((topic) => {
+    setCurrentTopic(topic);
+    pushPage('cards');
+  }, [pushPage]);
+
+  const showReviewCards = useCallback((subject) => {
+    setReviewSubject(subject);
+    pushPage('reviewCards');
+  }, [pushPage]);
+
+  // 从词书跳转到学习页面
+  const navigateToTopic = useCallback((topic) => {
+    setCurrentTopic(topic);
+    setTab('learn');
+    setPageStack(['learn', 'cards']);
+  }, []);
+
+  const goBack = useCallback(() => popPage(), [popPage]);
+
+  const switchTab = useCallback((newTab) => {
+    if (newTab === tab) return;
+    setTab(newTab);
+    setPageStack([newTab]);
+    setCurrentSubject(null);
+    setCurrentTopic(null);
+  }, [tab]);
 
   if (showSplash) {
     return <SplashPage onComplete={handleSplashComplete} />;
@@ -76,37 +117,6 @@ function App() {
   if (!user) {
     return <LoginPage onLogin={handleLogin} />;
   }
-
-  const pushPage = (page) => setPageStack(prev => [...prev, page]);
-  const popPage = () => setPageStack(prev => (prev.length <= 1 ? prev : prev.slice(0, -1)));
-
-  const currentPage = pageStack[pageStack.length - 1];
-  const isFullScreen = currentPage === 'cards' || currentPage === 'reviewCards';
-
-  const showTopics = (subject) => {
-    setCurrentSubject(subject);
-    pushPage('topics');
-  };
-
-  const showCards = (topic) => {
-    setCurrentTopic(topic);
-    pushPage('cards');
-  };
-
-  const showReviewCards = (subject) => {
-    setReviewSubject(subject);
-    pushPage('reviewCards');
-  };
-
-  const goBack = () => popPage();
-
-  const switchTab = (newTab) => {
-    if (newTab === tab) return;
-    setTab(newTab);
-    setPageStack([newTab]);
-    setCurrentSubject(null);
-    setCurrentTopic(null);
-  };
 
   const renderPage = () => {
     switch (currentPage) {
@@ -121,7 +131,7 @@ function App() {
       case 'reviewCards':
         return <CardsPage topic={reviewSubject} onBack={goBack} ebbinghaus={ebbinghaus} reviewMode />;
       case 'wordbook':
-        return <WordbookPage onBack={() => switchTab('learn')} />;
+        return <WordbookPage onBack={() => switchTab('learn')} onNavigateToTopic={navigateToTopic} />;
       case 'import':
         return <ImportPage onImportSuccess={() => {}} />;
       case 'ai':

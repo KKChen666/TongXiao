@@ -9,6 +9,23 @@ import { ChartBarIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outli
 const INTERVALS = [0, 1, 2, 4, 7, 15, 30];
 const DAY_LABELS = ['学习', '1天', '2天', '4天', '7天', '15天', '30天'];
 
+// Move CustomTooltip outside component to avoid re-creation on every render
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-lg text-xs">
+      <p className="font-semibold mb-1">第 {label} 天</p>
+      {payload.map((p, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-sm" style={{ background: p.color }} />
+          <span className="text-gray-500">{p.name}:</span>
+          <span className="font-medium">{p.value}{p.name.includes('记忆') ? '%' : ' 张'}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 function EbbinghausChart({ retentionStats }) {
   const curveData = useMemo(() => {
     const data = [];
@@ -37,22 +54,6 @@ function EbbinghausChart({ retentionStats }) {
   const avgRetention = totalCards > 0 && userData.length > 0
     ? Math.round(userData.reduce((s, r) => s + r.retention, 0) / userData.length)
     : null;
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (!active || !payload?.length) return null;
-    return (
-      <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-lg text-xs">
-        <p className="font-semibold mb-1">第 {label} 天</p>
-        {payload.map((p, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-sm" style={{ background: p.color }} />
-            <span className="text-gray-500">{p.name}:</span>
-            <span className="font-medium">{p.value}{p.name.includes('记忆') ? '%' : ' 张'}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <div className="space-y-3">

@@ -2,11 +2,18 @@
 AI 模块配置
 
 所有 AI 相关的配置集中管理，支持环境变量覆盖。
+优先级：系统环境变量 > .env 文件 > 默认值
 """
 
 import os
+from pathlib import Path
 
-# LLM 配置（必须通过环境变量设置）
+# 加载 .env 文件（在 import 时自动加载）
+from dotenv import load_dotenv
+_env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(_env_path)
+
+# LLM 配置
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://token-plan-cn.xiaomimimo.com/v1")
 MODEL_NAME = os.environ.get("MODEL_NAME", "mimo-v2.5-pro")
