@@ -24,6 +24,14 @@ services:
       - SERVER_HOST=0.0.0.0
       - SERVER_PORT=7896
       - JWT_SECRET=${JWT_SECRET}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://token-plan-cn.xiaomimimo.com/v1}
+      - MODEL_NAME=${MODEL_NAME:-mimo-v2.5-pro}
+      - COS_SECRET_ID=${COS_SECRET_ID}
+      - COS_SECRET_KEY=${COS_SECRET_KEY}
+      - COS_BUCKET=${COS_BUCKET:-tongxiao-1385409028}
+      - COS_REGION=${COS_REGION:-ap-nanjing}
+      - KNOWLEDGE_ADMIN_KEY=${KNOWLEDGE_ADMIN_KEY}
     volumes:
       # 挂载整个 /root/tongxiao（含 .git，用于 git pull）
       - /root/tongxiao:/app

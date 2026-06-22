@@ -8,6 +8,23 @@ const isNativeApp = typeof window !== 'undefined'
   && window.location.protocol === 'capacitor:';
 const API_BASE = isNativeApp ? SERVER_ORIGIN + '/api' : '/api';
 
+const S = {
+  bg: 'bg-white dark:bg-gray-900',
+  bgAlt: 'bg-gray-100 dark:bg-gray-800',
+  bgCard: 'bg-gray-50 dark:bg-gray-800',
+  text: 'text-gray-900 dark:text-gray-100',
+  textSub: 'text-gray-500 dark:text-gray-400',
+  textMuted: 'text-gray-400 dark:text-gray-500',
+  border: 'border-gray-200 dark:border-gray-700',
+  userBubble: 'bg-blue-600 text-white',
+  botBubble: 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100',
+  chip: 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300',
+  btnGhost: 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200',
+  code: 'bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-sm',
+  sourceCard: 'bg-gray-100 dark:bg-gray-700/50',
+  suggestion: 'bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50',
+};
+
 function AiPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -146,7 +163,6 @@ function AiPage() {
     setTotalTokens(0);
   };
 
-  // 文件上传
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -171,11 +187,9 @@ function AiPage() {
     }
   };
 
-  // 简易 Markdown 渲染
   const renderContent = (text) => {
     if (!text) return null;
-    const lines = text.split('\n');
-    return lines.map((line, i) => {
+    return text.split('\n').map((line, i) => {
       if (line.startsWith('### ')) return <h3 key={i} className="text-sm font-bold mt-3 mb-1">{line.slice(4)}</h3>;
       if (line.startsWith('## ')) return <h2 key={i} className="text-base font-bold mt-3 mb-1">{line.slice(3)}</h2>;
       if (line.startsWith('# ')) return <h1 key={i} className="text-lg font-bold mt-3 mb-1">{line.slice(2)}</h1>;
@@ -183,7 +197,7 @@ function AiPage() {
       let processed = line;
       processed = processed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       processed = processed.replace(/\*(.+?)\*/g, '<em>$1</em>');
-      processed = processed.replace(/`(.+?)`/g, '<code class="bg-content3 px-1 py-0.5 rounded text-sm">$1</code>');
+      processed = processed.replace(/`(.+?)`/g, `<code class="${S.code}">$1</code>`);
 
       if (line.startsWith('- ') || line.startsWith('* ')) {
         return <li key={i} className="ml-4 list-disc" dangerouslySetInnerHTML={{ __html: processed.slice(2) }} />;
@@ -197,39 +211,26 @@ function AiPage() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className={`flex flex-col h-full ${S.bg}`}>
       {/* 顶部栏 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-divider bg-content1 flex-shrink-0">
+      <div className={`flex items-center justify-between px-4 py-3 border-b ${S.border} ${S.bg} flex-shrink-0`}>
         <div className="flex items-center gap-2">
-          <SparklesIcon className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold">AI 学习助手</h2>
+          <SparklesIcon className="w-5 h-5 text-blue-600" />
+          <h2 className={`text-lg font-bold ${S.text}`}>AI 学习助手</h2>
           {totalTokens > 0 && (
-            <span className="text-xs text-default-400 bg-content2 px-2 py-0.5 rounded-full">
+            <span className={`text-xs ${S.textSub} ${S.chip} px-2 py-0.5 rounded-full`}>
               {totalTokens} tokens
             </span>
           )}
         </div>
         <div className="flex items-center gap-1">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.docx,.txt,.md"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-          <Button
-            isIconOnly
-            size="sm"
-            variant="ghost"
-            onPress={() => fileInputRef.current?.click()}
-            isDisabled={uploading}
-            title="上传知识库文档"
-          >
-            <ArrowUpTrayIcon className={`w-4 h-4 ${uploading ? 'text-primary animate-pulse' : 'text-default-400'}`} />
+          <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt,.md" onChange={handleFileUpload} className="hidden" />
+          <Button isIconOnly size="sm" variant="ghost" onPress={() => fileInputRef.current?.click()} isDisabled={uploading} title="上传知识库文档">
+            <ArrowUpTrayIcon className={`w-4 h-4 ${uploading ? 'text-blue-600 animate-pulse' : 'text-gray-500'}`} />
           </Button>
           {messages.length > 0 && (
             <Button isIconOnly size="sm" variant="ghost" onPress={clearChat} title="清空对话">
-              <TrashIcon className="w-4 h-4 text-default-400" />
+              <TrashIcon className="w-4 h-4 text-gray-500" />
             </Button>
           )}
         </div>
@@ -239,33 +240,28 @@ function AiPage() {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <SparklesIcon className="w-12 h-12 text-default-200 mb-4" />
-            <h3 className="text-lg font-semibold text-default-500 mb-2">AI 学习助手</h3>
-            <p className="text-sm text-default-400 max-w-xs">
+            <SparklesIcon className={`w-12 h-12 ${S.textMuted} mb-4`} />
+            <h3 className={`text-lg font-semibold ${S.textSub} mb-2`}>AI 学习助手</h3>
+            <p className={`text-sm ${S.textSub} max-w-xs`}>
               问我任何单词、知识点的问题，或者让我帮你出题练习。
               <br />
-              <span className="text-xs mt-2 block text-default-300">
+              <span className={`text-xs mt-2 block ${S.textMuted}`}>
                 所有回答均基于知识库数据，确保准确可靠
               </span>
             </p>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="mt-4 flex items-center gap-2 text-xs text-primary bg-primary/10 px-4 py-2 rounded-xl hover:bg-primary/20 transition-colors"
+              className={`mt-4 flex items-center gap-2 text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-4 py-2 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors`}
             >
               <DocumentIcon className="w-4 h-4" />
               上传电子书到知识库（PDF/DOCX/TXT）
             </button>
             <div className="grid grid-cols-2 gap-2 mt-6 w-full max-w-sm">
-              {[
-                'abandon 是什么意思？',
-                '帮我出5道填空题',
-                '我今天学了多少单词？',
-                '考研英语高频词汇',
-              ].map((q) => (
+              {['abandon 是什么意思？', '帮我出5道填空题', '我今天学了多少单词？', '考研英语高频词汇'].map((q) => (
                 <button
                   key={q}
                   onClick={() => { setInput(q); inputRef.current?.focus(); }}
-                  className="text-left text-xs p-3 rounded-xl bg-content2 hover:bg-content3 transition-colors text-default-500"
+                  className={`text-left text-xs p-3 rounded-xl ${S.bgAlt} hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${S.textSub}`}
                 >
                   {q}
                 </button>
@@ -277,15 +273,15 @@ function AiPage() {
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : msg.role === 'system' ? 'justify-center' : 'justify-start'}`}>
             {msg.role === 'system' ? (
-              <div className="text-xs text-default-400 bg-content2 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+              <div className={`text-xs ${S.textSub} ${S.bgAlt} px-3 py-1.5 rounded-full flex items-center gap-1.5`}>
                 <DocumentIcon className="w-3.5 h-3.5" />
                 {msg.content}
               </div>
             ) : (
               <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                 msg.role === 'user'
-                  ? 'bg-primary text-white rounded-br-md'
-                  : 'bg-content2 text-default-700 rounded-bl-md'
+                  ? `${S.userBubble} rounded-br-md`
+                  : `${S.botBubble} rounded-bl-md`
               }`}>
                 {msg.role === 'user' ? (
                   <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -293,51 +289,41 @@ function AiPage() {
                   <div className="prose-sm max-w-none [&_strong]:font-bold [&_em]:italic">
                     {renderContent(msg.content)}
                     {loading && i === messages.length - 1 && !msg.suggestions?.length && (
-                      <span className="inline-block w-1.5 h-4 bg-default-400 animate-pulse ml-0.5" />
+                      <span className="inline-block w-1.5 h-4 bg-gray-400 animate-pulse ml-0.5" />
                     )}
-                    {/* 推荐提问 */}
                     {msg.suggestions?.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-divider/50">
-                        <p className="text-xs text-default-400 mb-2">你可能还想问：</p>
+                      <div className={`mt-3 pt-3 border-t ${S.border}`}>
+                        <p className={`text-xs ${S.textSub} mb-2`}>你可能还想问：</p>
                         <div className="flex flex-wrap gap-1.5">
                           {msg.suggestions.map((s, si) => (
-                            <button
-                              key={si}
-                              onClick={() => sendMessage(s)}
-                              className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                            >
+                            <button key={si} onClick={() => sendMessage(s)}
+                              className={`text-xs px-3 py-1.5 rounded-lg ${S.suggestion} transition-colors`}>
                               {s}
                             </button>
                           ))}
                         </div>
                       </div>
                     )}
-                    {/* RAG 引用来源 */}
                     {msg.ragSources?.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-divider/50">
-                        <p className="text-xs text-default-400 mb-2 flex items-center gap-1">
+                      <div className={`mt-3 pt-3 border-t ${S.border}`}>
+                        <p className={`text-xs ${S.textSub} mb-2 flex items-center gap-1`}>
                           <BookOpenIcon className="w-3.5 h-3.5" /> 引用来源
                         </p>
                         <div className="space-y-1.5">
                           {msg.ragSources.map((s, si) => (
-                            <div key={si} className="text-xs bg-content3/50 rounded-lg px-2.5 py-2">
-                              <span className="text-primary font-medium">[{s.index}]</span>
-                              <span className="text-default-500 ml-1">{s.type}：</span>
-                              <span className="text-default-600 font-medium">{s.title}</span>
-                              <span className="text-default-400 ml-1">({s.origin})</span>
-                              {s.detail && (
-                                <p className="text-default-400 mt-0.5 truncate">{s.detail}</p>
-                              )}
+                            <div key={si} className={`text-xs ${S.sourceCard} rounded-lg px-2.5 py-2`}>
+                              <span className="text-blue-600 font-medium">[{s.index}]</span>
+                              <span className={`${S.textSub} ml-1`}>{s.type}：</span>
+                              <span className={`${S.text} font-medium`}>{s.title}</span>
+                              <span className={`${S.textMuted} ml-1`}>({s.origin})</span>
+                              {s.detail && <p className={`${S.textMuted} mt-0.5 truncate`}>{s.detail}</p>}
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
-                    {/* Token 统计 */}
                     {msg.tokenUsage && (
-                      <div className="mt-2 text-[10px] text-default-300">
-                        {msg.tokenUsage.total_tokens} tokens
-                      </div>
+                      <div className={`mt-2 text-[10px] ${S.textMuted}`}>{msg.tokenUsage.total_tokens} tokens</div>
                     )}
                   </div>
                 )}
@@ -345,12 +331,11 @@ function AiPage() {
             )}
           </div>
         ))}
-
         <div ref={messagesEndRef} />
       </div>
 
       {/* 输入区域 */}
-      <div className="flex-shrink-0 border-t border-divider bg-content1 px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom,0px))]">
+      <div className={`flex-shrink-0 border-t ${S.border} ${S.bg} px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom,0px))]`}>
         <div className="flex gap-2 items-end">
           <Input
             ref={inputRef}
@@ -359,16 +344,10 @@ function AiPage() {
             onKeyDown={handleKeyDown}
             placeholder="问我任何学习问题..."
             isDisabled={loading}
-            classNames={{ input: "text-sm", inputWrapper: "bg-content2 rounded-2xl min-h-[44px]" }}
+            classNames={{ input: "text-sm", inputWrapper: `${S.bgAlt} rounded-2xl min-h-[44px]` }}
           />
-          <Button
-            isIconOnly
-            color="primary"
-            isDisabled={!input.trim() || loading}
-            onPress={() => sendMessage()}
-            className="rounded-2xl flex-shrink-0"
-            size="lg"
-          >
+          <Button isIconOnly color="primary" isDisabled={!input.trim() || loading}
+            onPress={() => sendMessage()} className="rounded-2xl flex-shrink-0" size="lg">
             <PaperAirplaneIcon className="w-5 h-5" />
           </Button>
         </div>

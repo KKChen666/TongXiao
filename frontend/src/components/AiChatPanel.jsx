@@ -7,6 +7,19 @@ const isNativeApp = typeof window !== 'undefined'
   && window.location.protocol === 'capacitor:';
 const API_BASE = isNativeApp ? SERVER_ORIGIN + '/api' : '/api';
 
+const S = {
+  bg: 'bg-white dark:bg-gray-900',
+  bgAlt: 'bg-gray-100 dark:bg-gray-800',
+  text: 'text-gray-900 dark:text-gray-100',
+  textSub: 'text-gray-500 dark:text-gray-400',
+  textMuted: 'text-gray-400 dark:text-gray-500',
+  border: 'border-gray-200 dark:border-gray-700',
+  botBubble: 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100',
+  sourceCard: 'bg-gray-100 dark:bg-gray-700/50',
+  suggestion: 'bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400',
+  code: 'bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-xs',
+};
+
 function AiChatPanel({ open, onClose, context, subject = 'english' }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -25,7 +38,6 @@ function AiChatPanel({ open, onClose, context, subject = 'english' }) {
     }
   }, [open]);
 
-  // 首次打开时自动发送上下文问题
   useEffect(() => {
     if (open && context && messages.length === 0) {
       const autoMsg = `请帮我讲解一下这个知识点：${context}`;
@@ -148,7 +160,7 @@ function AiChatPanel({ open, onClose, context, subject = 'english' }) {
       let processed = line;
       processed = processed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       processed = processed.replace(/\*(.+?)\*/g, '<em>$1</em>');
-      processed = processed.replace(/`(.+?)`/g, '<code class="bg-content3 px-1 py-0.5 rounded text-xs">$1</code>');
+      processed = processed.replace(/`(.+?)`/g, `<code class="${S.code}">$1</code>`);
       if (line.startsWith('- ') || line.startsWith('* ')) {
         return <li key={i} className="ml-3 list-disc text-xs" dangerouslySetInnerHTML={{ __html: processed.slice(2) }} />;
       }
@@ -164,24 +176,22 @@ function AiChatPanel({ open, onClose, context, subject = 'english' }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-      {/* 遮罩 */}
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
 
-      {/* 面板 */}
-      <div className="relative w-full max-w-lg h-[80vh] max-h-[600px] bg-background rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-slideUp">
+      <div className={`relative w-full max-w-lg h-[80vh] max-h-[600px] ${S.bg} rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-slideUp`}>
         {/* 头部 */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-divider flex-shrink-0">
+        <div className={`flex items-center justify-between px-4 py-3 border-b ${S.border} flex-shrink-0`}>
           <div className="flex items-center gap-2">
-            <SparklesIcon className="w-4 h-4 text-primary" />
-            <span className="text-sm font-bold">AI 学习助手</span>
+            <SparklesIcon className="w-4 h-4 text-blue-600" />
+            <span className={`text-sm font-bold ${S.text}`}>AI 学习助手</span>
             {context && (
-              <span className="text-[10px] text-default-400 bg-content2 px-2 py-0.5 rounded-full max-w-[160px] truncate">
+              <span className={`text-[10px] ${S.textSub} ${S.bgAlt} px-2 py-0.5 rounded-full max-w-[160px] truncate`}>
                 {context}
               </span>
             )}
           </div>
           <Button isIconOnly size="sm" variant="ghost" onPress={onClose}>
-            <XMarkIcon className="w-4 h-4" />
+            <XMarkIcon className="w-4 h-4 text-gray-500" />
           </Button>
         </div>
 
@@ -191,8 +201,8 @@ function AiChatPanel({ open, onClose, context, subject = 'english' }) {
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[90%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
                 msg.role === 'user'
-                  ? 'bg-primary text-white rounded-br-md'
-                  : 'bg-content2 text-default-700 rounded-bl-md'
+                  ? 'bg-blue-600 text-white rounded-br-md'
+                  : `${S.botBubble} rounded-bl-md`
               }`}>
                 {msg.role === 'user' ? (
                   <p className="whitespace-pre-wrap text-xs">{msg.content}</p>
@@ -200,38 +210,36 @@ function AiChatPanel({ open, onClose, context, subject = 'english' }) {
                   <div className="[&_strong]:font-bold [&_em]:italic">
                     {renderContent(msg.content)}
                     {loading && i === messages.length - 1 && !msg.suggestions?.length && (
-                      <span className="inline-block w-1.5 h-3 bg-default-400 animate-pulse ml-0.5" />
+                      <span className="inline-block w-1.5 h-3 bg-gray-400 animate-pulse ml-0.5" />
                     )}
 
-                    {/* RAG 来源引用 */}
                     {msg.ragSources?.length > 0 && (
-                      <div className="mt-2 pt-2 border-t border-divider/50">
-                        <p className="text-[10px] text-default-400 mb-1 flex items-center gap-1">
+                      <div className={`mt-2 pt-2 border-t ${S.border}`}>
+                        <p className={`text-[10px] ${S.textSub} mb-1 flex items-center gap-1`}>
                           <BookOpenIcon className="w-3 h-3" /> 引用来源
                         </p>
                         <div className="space-y-1">
                           {msg.ragSources.map((s, si) => (
-                            <div key={si} className="text-[10px] bg-content3/50 rounded-lg px-2 py-1.5">
-                              <span className="text-primary font-medium">[{s.index}]</span>
-                              <span className="text-default-500 ml-1">{s.type}：</span>
-                              <span className="text-default-600">{s.title}</span>
-                              <span className="text-default-400 ml-1">({s.origin})</span>
+                            <div key={si} className={`text-[10px] ${S.sourceCard} rounded-lg px-2 py-1.5`}>
+                              <span className="text-blue-600 font-medium">[{s.index}]</span>
+                              <span className={`${S.textSub} ml-1`}>{s.type}：</span>
+                              <span className={`${S.text}`}>{s.title}</span>
+                              <span className={`${S.textMuted} ml-1`}>({s.origin})</span>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {/* 推荐提问 */}
                     {msg.suggestions?.length > 0 && (
-                      <div className="mt-2 pt-2 border-t border-divider/50">
-                        <p className="text-[10px] text-default-400 mb-1">你可能还想问：</p>
+                      <div className={`mt-2 pt-2 border-t ${S.border}`}>
+                        <p className={`text-[10px] ${S.textSub} mb-1`}>你可能还想问：</p>
                         <div className="flex flex-wrap gap-1">
                           {msg.suggestions.map((s, si) => (
                             <button
                               key={si}
                               onClick={() => sendMessage(s)}
-                              className="text-[10px] px-2 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                              className={`text-[10px] px-2 py-1 rounded-lg ${S.suggestion} transition-colors`}
                             >
                               {s}
                             </button>
@@ -241,7 +249,7 @@ function AiChatPanel({ open, onClose, context, subject = 'english' }) {
                     )}
 
                     {msg.tokenUsage && (
-                      <div className="mt-1 text-[9px] text-default-300">{msg.tokenUsage.total_tokens} tokens</div>
+                      <div className={`mt-1 text-[9px] ${S.textMuted}`}>{msg.tokenUsage.total_tokens} tokens</div>
                     )}
                   </div>
                 )}
@@ -252,7 +260,7 @@ function AiChatPanel({ open, onClose, context, subject = 'english' }) {
         </div>
 
         {/* 输入 */}
-        <div className="flex-shrink-0 border-t border-divider px-3 py-2 pb-[max(8px,env(safe-area-inset-bottom,0px))]">
+        <div className={`flex-shrink-0 border-t ${S.border} px-3 py-2 pb-[max(8px,env(safe-area-inset-bottom,0px))]`}>
           <div className="flex gap-2 items-end">
             <Input
               ref={inputRef}
@@ -262,7 +270,7 @@ function AiChatPanel({ open, onClose, context, subject = 'english' }) {
               placeholder="继续提问..."
               isDisabled={loading}
               size="sm"
-              classNames={{ input: "text-xs", inputWrapper: "bg-content2 rounded-xl min-h-[38px]" }}
+              classNames={{ input: "text-xs", inputWrapper: `${S.bgAlt} rounded-xl min-h-[38px]` }}
             />
             <Button
               isIconOnly
