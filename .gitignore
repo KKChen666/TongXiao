@@ -6,13 +6,17 @@ __pycache__/
 *.db
 data/
 .venv/
+<<<<<<< HEAD
 venv/
 env/
+=======
+>>>>>>> d63cfdb44ed3068568fb263b567bd88fb6579888
 frontend/node_modules/
 frontend/dist/
 
 # 构建产物（本地 build 输出）
 dist/
+<<<<<<< HEAD
 build/
 *.apk
 *.aab
@@ -23,6 +27,8 @@ deploy/release/*.aab
 # npm 缓存
 .npm-cache/
 .npm/
+=======
+>>>>>>> d63cfdb44ed3068568fb263b567bd88fb6579888
 
 # 环境变量（含敏感信息，不要提交）
 .env
@@ -39,6 +45,7 @@ backups/
 
 # 日志文件
 *.log
+<<<<<<< HEAD
 
 # 大型二进制文件
 *.zip
@@ -60,3 +67,5 @@ backups/
 frontend/android/app/build/
 frontend/android/.gradle/
 *.gradle/
+=======
+>>>>>>> d63cfdb44ed3068568fb263b567bd88fb6579888
