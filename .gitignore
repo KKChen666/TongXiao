@@ -6,11 +6,23 @@ __pycache__/
 *.db
 data/
 .venv/
+venv/
+env/
 frontend/node_modules/
 frontend/dist/
 
 # 构建产物（本地 build 输出）
 dist/
+build/
+*.apk
+*.aab
+*.ipa
+deploy/release/*.apk
+deploy/release/*.aab
+
+# npm 缓存
+.npm-cache/
+.npm/
 
 # 环境变量（含敏感信息，不要提交）
 .env
@@ -27,3 +39,24 @@ backups/
 
 # 日志文件
 *.log
+
+# 大型二进制文件
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.mp4
+*.mov
+*.avi
+*.psd
+*.exe
+*.msi
+*.dmg
+
+# 图片源文件（可按需取消注释）
+# logo/logo-source.png
+
+# Android 构建产物
+frontend/android/app/build/
+frontend/android/.gradle/
+*.gradle/
